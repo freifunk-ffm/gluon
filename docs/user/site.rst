@@ -83,7 +83,7 @@ regdom \: optional
 
       regdom = 'DE'
 
-    Setting ``regdom`` in mandatory if ``wifi24`` or ``wifi5`` is defined.
+    Setting ``regdom`` is mandatory if ``wifi24`` or ``wifi5`` is defined.
 
 wifi24 \: optional
     WLAN configuration for 2.4 GHz devices.
@@ -115,7 +115,8 @@ wifi24 \: optional
     An optional parameter ``vlan`` (integer) is supported.
 
     Both ``mesh`` and ``ibss`` accept an optional ``mcast_rate`` (kbit/s) parameter for
-    setting the default multicast datarate.
+    setting the multicast bitrate. Increasing the default value of 1000 to something
+    like 12000 is recommended.
     ::
 
        wifi24 = {
@@ -282,7 +283,7 @@ roles \: optional
     part of ``list``. If you want node owners to change the role via config mode add
     the package ``gluon-luci-node-role`` to ``site.mk``.
 
-    The strings to display in the LuCI interface can be configured per language in the
+    The strings to display in the LuCI interface are configured per language in the
     ``i18n/en.po``, ``i18n/de.po``, etc. files of the site repository using message IDs like
     ``gluon-luci-node-role:role:node`` and ``gluon-luci-node-role:role:backbone``.
     ::
