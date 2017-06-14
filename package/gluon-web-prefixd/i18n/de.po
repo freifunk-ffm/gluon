@@ -1,0 +1,29 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"PO-Revision-Date: 2017-06-14 02:25+0200\n"
+"Last-Translator:  <christof.schulze@gmx.net>\n"
+"Language-Team: German\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Prefix Sharing"
+msgstr "Prefix Teilen"
+
+msgid "Enabled"
+msgstr "Aktiviert"
+
+msgid "Prefix (must be /64)"
+msgstr "Prefix (mit Länge /64)"
+
+msgid ""
+"Your node can serve the mesh network as an exit for IPv6 traffic. "
+"In order to do that, you can distribute a /64 prefix throughout the
+net."
+msgstr ""
+"Dein Knoten kann im Mesh einen Prefix bekanntgeben und so IPv6 Datenverkehr"
+"direkt ausleiten."
+
