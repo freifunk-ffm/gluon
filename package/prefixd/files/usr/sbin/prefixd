@@ -1,0 +1,151 @@
+#!/bin/ash
+# parse route and decide to start/stop uradvd instances this is stateless 
+# towards the network and does not depend on the routing protocol used
+# Copyright: gpl 2, christof.schulze@gmx.net
+#
+# consider re-writing this in a c implementation once the concept is proven and
+# you get sick of the sh-overhead
+
+maxprefixes=3
+# TODO: do not hard-code the network prefix.
+# this prefix is really not in site.conf  this is whatever the ipv6 range of
+# the community is. where can we get this value?
+NETWIDEPREFIX=$(uci get prefixd.ffshare1.netprefix 2>/devnull)
+#NETWIDEPREFIX="2a06:8187:fb00::/40"
+L3ROAMDSOCK=/var/run/l3roamd.sock
+
+
+maxmetric=12000
+export prefix
+export metric
+tmpfile=/tmp/prefixd.$$
+tmpfile1=/tmp/prefixd.$$_
+touch $tmpfile
+touch $tmpfile1
+IP=$(which ip)
+
+trap cleanup EXIT
+
+parse_route() {
+	tmp="${1#default from }"
+	prefix="${tmp%% *}"
+	tmp=${1##*metric }
+	metric=${tmp%% *}
+}
+
+cleanup() {
+# cleanup on exit
+	while read
+	do
+		kill ${REPLY#* }
+	done < ${tmpfile}
+
+	rm ${tmpfile1}
+	rm ${tmpfile}
+}
+
+start_uradvd() {
+	# must be called with $1 being the prefix that the radvd will announce"
+	echo starting uradvd for prefix $1
+	prefix6=$(cat /lib/gluon/site.json |grep -e "x6\":\".*::\\\/64" -o|cut -d"\"" -f3|sed 's/\\//')
+	/usr/sbin/uradvd $(/lib/gluon/radvd/arguments|sed "s|$prefix6|$1|") &
+	echo ${1} $!>> $tmpfile
+}
+
+findmetricforroute() {
+	# $1 is the prefix being searched
+	line=$($IP -6 r s t 0 default|grep "^default from $1")
+	tmp=${line##* metric }
+	echo ${tmp%% *}
+}
+
+stop_uradvd() {
+	echo stopping uradvd for prefix $1
+	kill $(grep "$1" ${tmpfile}|cut -d" " -f2)
+	sed "/$1/d" -i ${tmpfile}
+}
+
+handle_prefix() {
+	metric=$2
+	prefix=$1
+
+	if grep -q ${prefix} "${tmpfile}"
+	then
+		# we already started an instance of uradvd for this prefix. check if we still need it
+		currentmetric=$(findmetricforroute ${prefix})
+		if [[ "$currentmetric" -gt $maxmetric ]]
+		then
+			stop_uradvd $prefix
+			start_roaming $prefix
+		fi
+	else
+		# we did not yet start an instance of uradvd for this prefix. check if we should.
+		# this means a) is there still a free uradvd slot and if not, is this prefix better than one currently being announced?
+		linecount=$(wc -l $tmpfile)
+		if [[ ${linecount%% *} -lt $maxprefixes ]]
+		then
+			if [ "$metric" -le $maxmetric ]
+			then
+				start_uradvd $prefix
+				start_roaming $prefix
+			fi
+		else
+			highestreply=$(
+			while read
+			do
+				metric_running_uradvd=$(findmetricforroute ${REPLY% *})
+				echo "$REPLY $metric_running_uradvd"
+			done < $tmpfile | sort -u -k3 -n -r |head -n1
+			)
+			if [[ ${highestreply## *} -gt $metric ]]
+			then
+				stop_uradvd ${highestreply%% *}
+				stop_roaming ${highestreply%% *}
+				start_uradvd ${prefix}
+				start_roaming ${prefix}
+			fi
+		fi
+	fi
+}
+
+start_roaming() {
+	echo "add_prefix $1"| uc $L3ROAMDSOCK
+}
+
+stop_roaming() {
+	echo "del_prefix $1"| uc $L3ROAMDSOCK
+}
+
+enabled=$(uci get prefixd.ffshare1.enabled 2>/devnull)
+if [[ "$enabled" = "1" ]]
+then
+	shareprefix=$(uci get prefixd.ffshare1.prefix)
+	/usr/bin/ip -6 route add  default from $shareprefix dev br-wan metric 96 proto 48 table 11
+	echo "-C redistribute src-prefix $shareprefix allow" >/tmp/addn-babelopts
+	/etc/init.d/gluon-mesh-babel restart
+	start_uradvd ${shareprefix}
+fi
+
+
+while true
+do
+	$IP -6 r s default proto babel |grep -v "$NETWIDEPREFIX"|grep from|grep metric|sort -k9 -n >$tmpfile1
+	while read
+	do
+		prefix=""
+		parse_route "$REPLY"
+		handle_prefix $prefix $metric
+	done < "${tmpfile1}"
+
+	while read
+	do
+		if ! $IP -6 r s t 0 | grep -q "${REPLY%% *}"
+		then
+			# not found a route for this running uradvd, killing it
+			stop_uradvd ${REPLY%% *}
+			stop_roaming ${REPLY%% *}
+		fi
+	done < "${tmpfile}"
+	sleep 10
+done
+
