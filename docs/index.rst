@@ -64,6 +64,7 @@ Releases
 .. toctree::
    :maxdepth: 1
 
+   releases/v2016.2.6
    releases/v2016.2.5
    releases/v2016.2.4
    releases/v2016.2.3
@@ -183,7 +184,7 @@ ar71xx-generic
   - TL-WR741N/ND (v1, v2, v4, v5)
   - TL-WR743N/ND (v1, v2)
   - TL-WR801N/ND (v1, v2)
-  - TL-WR841N/ND (v3, v5, v7, v8, v9, v10, v11)
+  - TL-WR841N/ND (v3, v5, v7, v8, v9, v10, v11, v12)
   - TL-WR842N/ND (v1, v2, v3)
   - TL-WR843N/ND (v1)
   - TL-WR940N (v1, v2, v3, v4)
