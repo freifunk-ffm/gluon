@@ -18,8 +18,8 @@ the future development of Gluon.
 ## Use a release!
 
 Please refrain from using the `master` branch for anything else but development purposes!
-Use the most recent release instead. You can list all relaseses by running `git branch -a`
-and switch to one by running `git checkout v2016.2.7 && make update`.
+Use the most recent release instead. You can list all releases by running `git tag`
+and switch to one by running `git checkout v2017.1.4 && make update`.
 
 If you're using the autoupdater, do not autoupdate nodes with anything but releases.
 If you upgrade using random master commits the nodes *will break* eventually.
@@ -28,12 +28,11 @@ If you upgrade using random master commits the nodes *will break* eventually.
 
 To subscribe to the list, send a message to:
 
-    gluon-subscribe@luebeck.freifunk.net
+    gluon+subscribe@luebeck.freifunk.net
 
 To remove your address from the list, just send a message to
 the address in the `List-Unsubscribe` header of any list
 message. If you haven't changed addresses since subscribing,
 you can also send a message to:
 
-    gluon-unsubscribe@luebeck.freifunk.net
-
+    gluon+unsubscribe@luebeck.freifunk.net

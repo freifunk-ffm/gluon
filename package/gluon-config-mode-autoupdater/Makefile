@@ -5,7 +5,7 @@ PKG_VERSION:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
-include $(GLUONDIR)/include/package.mk
+include ../gluon.mk
 
 PKG_CONFIG_DEPENDS += $(GLUON_I18N_CONFIG)
 
@@ -13,12 +13,8 @@ PKG_CONFIG_DEPENDS += $(GLUON_I18N_CONFIG)
 define Package/gluon-config-mode-autoupdater
   SECTION:=gluon
   CATEGORY:=Gluon
-  TITLE:=Let the user know whether the autoupdater is enabled or not.
+  TITLE:=Config Mode: Let the user know whether the autoupdater is enabled or not
   DEPENDS:=gluon-config-mode-core-virtual +gluon-autoupdater
-endef
-
-define Package/gluon-config-mode-autoupdater/description
-	Luci based config mode
 endef
 
 define Build/Prepare

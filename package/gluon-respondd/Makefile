@@ -5,14 +5,14 @@ PKG_VERSION:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
-include $(GLUONDIR)/include/package.mk
+include ../gluon.mk
 
 
 define Package/gluon-respondd
   SECTION:=gluon
   CATEGORY:=Gluon
   TITLE:=Provides node information to the network
-  DEPENDS:=+gluon-core +libplatforminfo +libgluonutil +libuci +respondd
+  DEPENDS:=+gluon-core +libplatforminfo +libgluonutil +libuci +ubus +respondd
 endef
 
 define Build/Prepare

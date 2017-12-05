@@ -5,14 +5,14 @@ PKG_VERSION:=1
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
-include $(GLUONDIR)/include/package.mk
+include ../gluon.mk
 
 
 define Package/gluon-client-bridge
   SECTION:=gluon
   CATEGORY:=Gluon
   TITLE:=Provides a bridge and a wireless interface for clients to connect to
-  DEPENDS:=+gluon-core
+  DEPENDS:=+gluon-core +kmod-veth
 endef
 
 define Build/Prepare

@@ -46,7 +46,7 @@ ntp_server
     List of NTP servers available in your community or used by your community, e.g.:
     ::
 
-       ntp_servers = {'1.ntp.services.ffeh','2.ntp.services.ffeh'}
+       ntp_servers = {'1.ntp.services.ffac','2.ntp.services.ffac'}
 
     This NTP servers must be reachable via IPv6 from the nodes. If you don't want to set an IPv6 address
     explicitly, but use a hostname (which is recommended), see also the :ref:`FAQ <faq-dns>`.
@@ -56,23 +56,27 @@ opkg \: optional
 
     There are two optional fields in the ``opkg`` section:
 
-    - ``openwrt`` overrides the default OpenWrt repository URL
+    - ``lede`` overrides the default LEDE repository URL. The default URL would
+      correspond to ``http://downloads.lede-project.org/snapshots/packages/%A``
+      and usually doesn't need to be changed when nodes are expected to have IPv6
+      internet connectivity.
     - ``extra`` specifies a table of additional repositories (with arbitrary keys)
 
     ::
 
       opkg = {
-        openwrt = 'http://opkg.services.ffeh/openwrt/%n/%v/%S/packages',
+        lede = 'http://opkg.services.ffac/lede/snapshots/packages/%A',
         extra = {
-          modules = 'http://opkg.services.ffeh/modules/gluon-%GS-%GR/%S',
+          gluon = 'http://opkg.services.ffac/modules/gluon-%GS-%GR/%S',
         },
       }
 
     There are various patterns which can be used in the URLs:
 
-    - ``%n`` is replaced by the OpenWrt version codename (e.g. "chaos_calmer")
-    - ``%v`` is replaced by the OpenWrt version number (e.g. "15.05")
-    - ``%S`` is replaced by the target architecture (e.g. "ar71xx/generic")
+    - ``%n`` is replaced by the LEDE version codename
+    - ``%v`` is replaced by the LEDE version number (e.g. "17.01")
+    - ``%S`` is replaced by the target board (e.g. "ar71xx/generic")
+    - ``%A`` is replaced by the target architecture (e.g. "mips_24kc")
     - ``%GS`` is replaced by the Gluon site code (as specified in ``site.conf``)
     - ``%GV`` is replaced by the Gluon version
     - ``%GR`` is replaced by the Gluon release (as specified in ``site.mk``)
@@ -98,7 +102,7 @@ wifi24 \: optional
 
     Each interface may be disabled by setting ``disabled`` to ``true``.
     This will only affect new installations.
-    Upgrades will not changed the disabled state.
+    Upgrades will not change the disabled state.
 
     Additionally it is possible to configure the ``supported_rates`` and ``basic_rate``
     of each radio. Both are optional, by default hostapd/driver dictate the rates.
@@ -124,10 +128,10 @@ wifi24 \: optional
          supported_rates = {6000, 9000, 12000, 18000, 24000, 36000, 48000, 54000},
          basic_rate = {6000, 9000, 18000, 36000, 54000},
          ap = {
-           ssid = 'entenhausen.freifunk.net',
+           ssid = 'alpha-centauri.freifunk.net',
          },
          mesh = {
-           id = 'entenhausen-mesh',
+           id = 'alpha-centauri-mesh',
            mcast_rate = 12000,
          },
          ibss = {
@@ -165,63 +169,95 @@ mesh \: optional
        mesh = {
          batman_adv = {
            gw_sel_class = 1,
-	 },
+         },
        }
 
 
-fastd_mesh_vpn
-    Remote server setup for the fastd-based mesh VPN.
+mesh_vpn
+    Remote server setup for the mesh VPN.
 
-    The `enabled` option can be set to true to enable the VPN by default.
+    The `enabled` option can be set to true to enable the VPN by default. `mtu`
+    defines the MTU of the VPN interface.
+
+    The `fastd` section configures settings specific to the *fastd* VPN
+    implementation.
 
     If `configurable` is set to `false` or unset, the method list will be replaced on updates
     with the list from the site configuration. Setting `configurable` to `true` will allow the user to
     add the method ``null`` to the beginning of the method list or remove ``null`` from it,
     and make this change survive updates. Setting `configurable` is necessary for the
-    package `gluon-luci-mesh-vpn-fastd`, which adds a UI for this configuration.
+    package `gluon-web-mesh-vpn-fastd`, which adds a UI for this configuration.
 
     In any case, the ``null`` method should always be the first method in the list
     if it is supported at all. You should only set `configurable` to `true` if the
     configured peers support both the ``null`` method and methods with encryption.
+
+    You can set syslog_level from verbose (default) to warn to reduce syslog output.
+
+    The `tunneldigger` section is used to define the *tunneldigger* broker list.
+
+    **Note:** It doesn't make sense to include both `fastd` and `tunneldigger`
+    sections in the same configuration file, as only one of the packages *gluon-mesh-vpn-fastd*
+    and *gluon-mesh-vpn-tunneldigger* should be installed with the current
+    implementation.
+
     ::
 
-      fastd_mesh_vpn = {
-        methods = {'salsa2012+umac'},
-      	-- enabled = true,
-      	-- configurable = true,
+      mesh_vpn = {
+        -- enabled = true,
         mtu = 1280,
-        groups = {
-          backbone = {
-            -- Limit number of connected peers from this group
-            limit = 1,
-            peers = {
-              peer1 = {
-                key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-                -- Having multiple domains prevents SPOF in freifunk.net
-                remotes = {
-                  'ipv4 "vpn1.entenhausen.freifunk.net" port 10000',
-                  'ipv4 "vpn1.entenhausener-freifunk.de" port 10000',
+
+        fastd = {
+          methods = {'salsa2012+umac'},
+          -- configurable = true,
+          -- syslog_level = 'warn',
+          groups = {
+            backbone = {
+              -- Limit number of connected peers from this group
+              limit = 1,
+              peers = {
+                peer1 = {
+                  key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+                  -- Having multiple domains prevents SPOF in freifunk.net
+                  remotes = {
+                    'ipv4 "vpn1.alpha-centauri.freifunk.net" port 10000',
+                    'ipv4 "vpn1.alpha-centauri-freifunk.de" port 10000',
+                  },
+                },
+                peer2 = {
+                  key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+                  -- You can also omit the ipv4 to allow both connection via ipv4 and ipv6
+                  remotes = {'"vpn2.alpha-centauri.freifunk.net" port 10000'},
+                },
+                peer3 = {
+                  key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+                  -- In addition to domains you can also add ip addresses, which provides
+                  -- resilience in case of dns outages
+                  remotes = {
+                    '"vpn3.alpha-centauri.freifunk.net" port 10000',
+                    '[2001:db8::3:1]:10000',
+                    '192.0.2.3:10000',
+                  },
                 },
               },
-              peer2 = {
-                key = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
-                -- You can also omit the ipv4 to allow both connection via ipv4 and ipv6
-                remotes = {'"vpn2.entenhausen.freifunk.net" port 10000'},
-              },
+              -- Optional: nested peer groups
+              -- groups = {
+              --   lowend_backbone = {
+              --     limit = 1,
+              --     peers = ...
+              --   },
+              -- },
             },
-            -- Optional: nested peer groups
-            -- groups = {
-            --   lowend_backbone = {
-            --     limit = 1,
-            --     peers = ...
-            --   },
+            -- Optional: additional peer groups, possibly with other limits
+            -- peertopeer = {
+            --   limit = 10,
+            --   peers = { ... },
             -- },
           },
-          -- Optional: additional peer groups, possibly with other limits
-          -- peertopeer = {
-          --   limit = 10,
-          --   peers = { ... },
-          -- },
+        },
+
+        tunneldigger = {
+          brokers = {'vpn1.alpha-centauri.freifunk.net'}
         },
 
         bandwidth_limit = {
@@ -238,9 +274,15 @@ fastd_mesh_vpn
 
 mesh_on_wan \: optional
     Enables the mesh on the WAN port (``true`` or ``false``).
+    ::
+
+       mesh_on_wan = true,
 
 mesh_on_lan \: optional
     Enables the mesh on the LAN port (``true`` or ``false``).
+    ::
+    
+        mesh_on_lan = true,
 
 poe_passthrough \: optional
     Enable PoE passthrough by default on hardware with such a feature.
@@ -259,7 +301,7 @@ autoupdater \: package
             name = 'stable',
             mirrors = {
               'http://[fdca:ffee:babe:1::fec1]/firmware/stable/sysupgrade/',
-              'http://autoupdate.entenhausen.freifunk.net/firmware/stable/sysupgrade/',
+              'http://autoupdate.alpha-centauri.freifunk.net/firmware/stable/sysupgrade/',
             },
             -- Number of good signatures required
             good_signatures = 2,
@@ -281,11 +323,11 @@ roles \: optional
     the community which roles to define. See the section below as an example.
     ``default`` takes the default role which is set initially. This value should be
     part of ``list``. If you want node owners to change the role via config mode add
-    the package ``gluon-luci-node-role`` to ``site.mk``.
+    the package ``gluon-web-node-role`` to ``site.mk``.
 
-    The strings to display in the LuCI interface are configured per language in the
+    The strings to display in the web interface are configured per language in the
     ``i18n/en.po``, ``i18n/de.po``, etc. files of the site repository using message IDs like
-    ``gluon-luci-node-role:role:node`` and ``gluon-luci-node-role:role:backbone``.
+    ``gluon-web-node-role:role:node`` and ``gluon-web-node-role:role:backbone``.
     ::
 
       roles = {
@@ -314,9 +356,9 @@ legacy \: package
 
       legacy = {
              version_files = {'/etc/.freifunk_version_keep', '/etc/.eff_version_keep'},
-             old_files = {'/etc/config/config_mode', '/etc/config/ffeh', '/etc/config/freifunk'},
-             config_mode_configs = {'config_mode', 'ffeh', 'freifunk'},
-             fastd_configs = {'ffeh_mesh_vpn', 'mesh_vpn'},
+             old_files = {'/etc/config/config_mode', '/etc/config/ffac', '/etc/config/freifunk'},
+             config_mode_configs = {'config_mode', 'ffac', 'freifunk'},
+             fastd_configs = {'ffac_mesh_vpn', 'mesh_vpn'},
              mesh_ifname = 'freifunk',
              tc_configs = {'ffki', 'freifunk'},
              wifi_names = {'wifi_freifunk', 'wifi_freifunk5', 'wifi_mesh', 'wifi_mesh5'},
@@ -360,6 +402,15 @@ gluon-config-mode:welcome
 
 gluon-config-mode:pubkey
     Information about the public VPN key on the reboot page.
+
+gluon-config-mode:novpn
+    Information shown on the reboot page, if the mesh VPN was not selected.
+
+gluon-config-mode:altitude-label
+    Label for the ``altitude`` field
+
+gluon-config-mode:altitude-help
+    Description for the usage of the ``altitude`` field
 
 gluon-config-mode:reboot
     General information shown on the reboot page.
@@ -461,7 +512,7 @@ This is a non-exhaustive list of site-repos from various communities:
 * `site-ffgoe <https://github.com/freifunk-goettingen/site-ffgoe>`_ (Göttingen)
 * `site-ffgt-rhw <https://github.com/ffgtso/site-ffgt-rhw>`_ (Guetersloh)
 * `site-ffhh <https://github.com/freifunkhamburg/site-ffhh>`_ (Hamburg)
-* `site-ffho <https://git.c3pb.de/freifunk-pb/site-ffho>`_ (Hochstift)
+* `site-ffho <https://git.ffho.net/freifunkhochstift/ffho-site>`_ (Hochstift)
 * `site-ffhgw <https://github.com/lorenzo-greifswald/site-ffhgw>`_ (Greifswald)
 * `site-ffka <https://github.com/ffka/site-ffka>`_ (Karlsruhe)
 * `site-ffki <http://git.freifunk.in-kiel.de/ffki-site/>`_ (Kiel)
@@ -470,7 +521,7 @@ This is a non-exhaustive list of site-repos from various communities:
 * `site-ffhl <https://github.com/freifunk-luebeck/site-ffhl>`_ (Lübeck)
 * `site-fflg <https://github.com/kartenkarsten/site-fflg>`_ (Lüneburg)
 * `site-ffmd <https://github.com/FreifunkMD/site-ffmd>`_ (Magdeburg)
-* `site-ffmwu <https://github.com/freifunk-mwu/site-ffmwu>`_ (Mainz, Wiesbaden & Umgebung)
+* `site-ffmwu <https://github.com/freifunk-mwu/sites-ffmwu>`_ (Mainz, Wiesbaden & Umgebung)
 * `site-ffmyk <https://github.com/FreifunkMYK/site-ffmyk>`_ (Mayen-Koblenz)
 * `site-ffmo <https://github.com/ffruhr/site-ffmo>`_ (Moers)
 * `site-ffmg <https://github.com/ffruhr/site-ffmg>`_ (Mönchengladbach)
@@ -481,6 +532,7 @@ This is a non-exhaustive list of site-repos from various communities:
 * `site-ffniers <https://github.com/ffruhr/site-ffniers>`_ (Niersufer)
 * `site-ffnw <https://git.nordwest.freifunk.net/ffnw-firmware/siteconf/tree/master>`_ (Nordwest)
 * `site-ffrgb <https://github.com/ffrgb/site-ffrgb>`_ (Regensburg)
+* `site-ffrn <https://github.com/Freifunk-Rhein-Neckar/site-ffrn>`_ (Rhein-Neckar)
 * `site-ffruhr <https://github.com/ffruhr?utf8=✓&query=site>`_ (Ruhrgebiet, Multi-Communities)
 * `site-ffs <https://github.com/freifunk-stuttgart/site-ffs>`_ (Stuttgart)
 * `site-fftr <https://github.com/freifunktrier/site-fftr>`_ (Trier)

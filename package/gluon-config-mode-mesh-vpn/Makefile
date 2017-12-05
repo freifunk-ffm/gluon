@@ -5,7 +5,7 @@ PKG_VERSION:=2
 
 PKG_BUILD_DIR := $(BUILD_DIR)/$(PKG_NAME)
 
-include $(GLUONDIR)/include/package.mk
+include ../gluon.mk
 
 PKG_CONFIG_DEPENDS += $(GLUON_I18N_CONFIG)
 
@@ -14,7 +14,7 @@ define Package/gluon-config-mode-mesh-vpn
   SECTION:=gluon
   CATEGORY:=Gluon
   TITLE:=Toggle mesh-vpn and bandwidth limit
-  DEPENDS:=gluon-config-mode-core-virtual +gluon-mesh-vpn-fastd
+  DEPENDS:=gluon-config-mode-core-virtual +gluon-mesh-vpn-core
 endef
 
 define Build/Prepare
