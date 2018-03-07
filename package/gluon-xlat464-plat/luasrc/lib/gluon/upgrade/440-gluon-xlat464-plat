@@ -1,0 +1,35 @@
+#!/usr/bin/lua
+local site = require 'gluon.site'
+local sysconfig = require 'gluon.sysconfig'
+local uci = require('simple-uci').cursor()
+
+
+local appendix = sysconfig.primary_mac:gsub('%:', '')
+appendix = string.format('%x:%x:%x', tonumber(appendix:sub(1, 4), 16), tonumber(appendix:sub(5, 8), 16), tonumber(appendix:sub(9, 12), 16))
+local plat_prefix = string.format('%s%s::/96', site.plat_range():gsub(':/.+', ''), appendix)
+
+
+uci:delete('network', 'plat')
+uci:section('network', 'interface', 'plat', {
+	auto = false,
+	local_v6 = plat_prefix,
+	proto = 'xlat464plat',
+	tunlink = 'wan',
+	zone = 'wan',
+	zone6 = 'mesh',
+})
+uci:save('network')
+
+
+-- LEDE/OpenWrt fw3 IPv6 SNAT seems to be broken in the current version (says „snat_ip is unknown“). Append SNAT rule manually:
+io.open('/etc/firewall.xlat464plat', 'w'):write("#!/bin/sh\nip6tables -t nat -A POSTROUTING -o plat -j SNAT --to fddd:c:1a4c:1a4c:1a4c:1a4c:c000:8\n")
+uci:delete('firewall', 'nat66')
+uci:section('firewall', 'include', 'nat66', {
+	path = '/etc/firewall.xlat464plat',
+	family = 'ipv6',
+})
+uci:save('firewall')
+
+
+
+
