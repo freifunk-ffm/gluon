@@ -40,11 +40,11 @@ end
 
 need_boolean('poe_passthrough', false)
 if need_table('dns', nil, false) then
-	need_number('dns.cacheentries', false)
 	need_string_array_match('dns.servers', '^[%x:]+$', false)
 end
 
 if need_table('next_node', nil, false) then
+	need_string('next_node.name', false)
 	need_string_match('next_node.ip6', '^[%x:]+$', false)
 	need_string_match('next_node.ip4', '^%d+.%d+.%d+.%d+$', false)
 end

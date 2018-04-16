@@ -13,7 +13,7 @@ fixed eventually to use platform_do_upgrade for that purpose.
 Signed-off-by: Matthias Schiffer <mschiffer@universe-factory.net>
 
 diff --git a/package/base-files/files/lib/upgrade/common.sh b/package/base-files/files/lib/upgrade/common.sh
-index 17248c2b1decd6f92558fb89601238b55fd0f0d6..fc59bf2323498d332159b00eb7ab443bfe6b147e 100644
+index ef9aac709fc1619ba15eeb0aeb4a9a6a372369b2..af7682c29e005c6ca47b91e9be2d60c359a90d05 100644
 --- a/package/base-files/files/lib/upgrade/common.sh
 +++ b/package/base-files/files/lib/upgrade/common.sh
 @@ -30,106 +30,6 @@ install_bin() { # <file> [ <symlink> ... ]
@@ -245,7 +245,7 @@ index 4e2aa3a23c3bab07a795762a30a4d4f701081934..cc8047d988e39ca9ba27d2588744aad4
 +# Exec new shell from ramfs
 +exec /bin/busybox ash -c "$COMMAND"
 diff --git a/package/base-files/files/sbin/sysupgrade b/package/base-files/files/sbin/sysupgrade
-index 2d67371ef74b4b970076a069e97f4fd6a1e0bc95..200a0e520b5df8bcc208f4d8fd731756e94294fb 100755
+index fa08f4194daa0ee74758b9f49a23fe8dcb4b933d..347860d00af27a61152703320bb210d30726db83 100755
 --- a/package/base-files/files/sbin/sysupgrade
 +++ b/package/base-files/files/sbin/sysupgrade
 @@ -1,7 +1,5 @@
