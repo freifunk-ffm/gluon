@@ -48,10 +48,10 @@ index e1efb561b33da4dcfcb82ee953cd888170476dfb..e67b5e38561e841b88e486341950c52e
  tl-wr2543n)
  	ucidef_set_led_usbdev "usb" "USB" "tp-link:green:usb" "1-1"
 diff --git a/target/linux/ar71xx/base-files/etc/board.d/02_network b/target/linux/ar71xx/base-files/etc/board.d/02_network
-index 24ead87850f13346ea4be4f9bfb5582e64a2c4ad..27a0266923743d4856919b9c8772a40e59febe83 100755
+index cefb7413eac6ffc50e67f1eaf63def749314428b..454abe6a5005621967dd96e0282e7bce2a0b127e 100755
 --- a/target/linux/ar71xx/base-files/etc/board.d/02_network
 +++ b/target/linux/ar71xx/base-files/etc/board.d/02_network
-@@ -237,7 +237,8 @@ ar71xx_setup_interfaces()
+@@ -243,7 +243,8 @@ ar71xx_setup_interfaces()
  	mynet-n750|\
  	sr3200|\
  	wndr3700v4|\
@@ -61,7 +61,7 @@ index 24ead87850f13346ea4be4f9bfb5582e64a2c4ad..27a0266923743d4856919b9c8772a40e
  		ucidef_add_switch "switch0" \
  			"0@eth0" "1:lan" "2:lan" "3:lan" "4:lan" "5:wan"
  		;;
-@@ -481,6 +482,7 @@ ar71xx_setup_macs()
+@@ -487,6 +488,7 @@ ar71xx_setup_macs()
  		lan_mac=$(mtd_get_mac_binary caldata 0)
  		wan_mac=$(mtd_get_mac_binary caldata 6)
  		;;
@@ -82,10 +82,10 @@ index 38cc5d7853c79f2a7800a387310a95abb3b4de1b..61db387c9ecefd7090c25a5f5d75fdbf
  	tl-wr1043nd-v2|\
  	tl-wr1043nd-v4|\
 diff --git a/target/linux/ar71xx/base-files/lib/ar71xx.sh b/target/linux/ar71xx/base-files/lib/ar71xx.sh
-index 46711af2b26159ebb105fa97cd8a85bb9c00911a..de6042b202bbd07e64833743933be1cbaf1ed495 100755
+index fc7d862c2911e96f76622cbed23e99863814da63..8f8158bac8a28db4f4f15ce5c37f48a21084dc03 100755
 --- a/target/linux/ar71xx/base-files/lib/ar71xx.sh
 +++ b/target/linux/ar71xx/base-files/lib/ar71xx.sh
-@@ -944,6 +944,9 @@ ar71xx_board_detect() {
+@@ -947,6 +947,9 @@ ar71xx_board_detect() {
  	*"TL-WR1043ND v4")
  		name="tl-wr1043nd-v4"
  		;;
@@ -96,10 +96,10 @@ index 46711af2b26159ebb105fa97cd8a85bb9c00911a..de6042b202bbd07e64833743933be1cb
  		name="tl-wr2543n"
  		;;
 diff --git a/target/linux/ar71xx/base-files/lib/upgrade/platform.sh b/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-index e65f6e2f7594ba373fbc9a26620859b9005c8532..e748a2559cdb3a0ca6618429b0f613a656e39388 100755
+index 6258713dd0e3325ab109689f0ed3b51e27c41f89..774e3c8964ef724d1efbae56434aeaa9f1c298a4 100755
 --- a/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
 +++ b/target/linux/ar71xx/base-files/lib/upgrade/platform.sh
-@@ -261,6 +261,7 @@ platform_check_image() {
+@@ -269,6 +269,7 @@ platform_check_image() {
  	tew-712br|\
  	tew-732br|\
  	tew-823dru|\
