@@ -20,7 +20,8 @@ start_service () {
 	procd_set_param stdout 1
 	procd_set_param stderr 1
 	procd_set_param respawn ${respawn_threshold:-3660} ${respawn_timeout:-5} ${respawn_retry:-0}
-	procd_set_param command "$PROG" -s /var/run/l3roamd.sock -p $(lua -e 'print(require("gluon.site").prefix6())') $interfaces -t 254 -a $(uci get network.loopback.ip6addr | cut -d/ -f1) -4 0:0:0:0:0:ffff::/96 -b br-client
+	# procd_set_param command "$PROG"  -d -s /var/run/l3roamd.sock -p $(lua -e 'print(require("gluon.site").prefix6())') $interfaces -t 254 -a $(uci get network.loopback.ip6addr | cut -d/ -f1) -4 $(lua -e 'mac=require("gluon.util").node_id();print(require("gluon.site").clat_range():gsub("::/48",":") .. mac:sub(1,4) .. ":" .. mac:sub(5,8) .. ":" .. mac:sub(9,12))')::/96 -b br-client -p $(lua -e 'print(require("gluon.site").prefix4())')
+	procd_set_param command "$PROG"  -d -s /var/run/l3roamd.sock -p $(lua -e 'print(require("gluon.site").prefix6())') $interfaces -t 254 -a $(uci get network.loopback.ip6addr | cut -d/ -f1) -b br-client -p $(lua -e 'print(require("gluon.site").prefix4())')
 	procd_close_instance
 }
 
