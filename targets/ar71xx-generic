@@ -65,6 +65,12 @@ factory
 device gl-ar300m gl-ar300m
 factory
 
+if [ "$ATH10K_PACKAGES" ]; then
+device gl-ar750 gl-ar750
+packages $ATH10K_PACKAGES
+factory
+fi
+
 
 # Linksys by Cisco
 
@@ -184,6 +190,9 @@ device tp-link-archer-c7-v2 archer-c7-v2
 packages $ATH10K_PACKAGES
 factory -squashfs-factory${GLUON_REGION:+-${GLUON_REGION}} .bin
 
+device tp-link-archer-c7-v4 archer-c7-v4
+packages $ATH10K_PACKAGES
+
 if [ "$BROKEN" ]; then
 device tp-link-archer-c25-v1 archer-c25-v1 # instability with 5GHz mesh in some environments
 packages $ATH10K_PACKAGES_QCA9887
@@ -246,6 +255,7 @@ fi
 
 if [ "$ATH10K_PACKAGES" ]; then
 device ubiquiti-unifi-ac-lite ubnt-unifiac-lite
+alias ubiquiti-unifi-ac-mesh
 packages $ATH10K_PACKAGES
 factory
 
