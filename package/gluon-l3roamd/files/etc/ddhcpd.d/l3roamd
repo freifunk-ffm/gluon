@@ -1,0 +1,8 @@
+#!/bin/sh
+
+echo "$@"
+
+if [ "$1" = "lease"  ]
+then
+	echo add_address "$2" "$3" | uc /var/run/l3roamd.sock
+fi
