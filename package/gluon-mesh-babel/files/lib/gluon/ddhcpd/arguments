@@ -1,0 +1,35 @@
+#!/usr/bin/lua
+
+local e=require"gluon.site"
+
+if e.next_node() and e.next_node.ip4() then
+	io.write(" -o 3:4:" ..e.next_node.ip4())  -- Router
+	io.write(" -o 6:4:" ..e.next_node.ip4())  -- DNS
+	io.write(" -o 54:4:" ..e.next_node.ip4()) -- NIS
+end
+--[[
+if e.prefix4 then -- Subnet for net as in site configuration
+	prefix=tonumber(string.gsub(e.prefix4,".*\/([0-9]+)","%1"),10)
+	io.write(" -o 1:4:")
+	for i=0,3,1 do
+		if prefix >= 8 then
+			io.write("255")
+			prefix = prefix - 8
+		elseif prefix > 0 then
+			io.write(2^(8 - prefix))
+			prefix=0
+		else
+			io.write("0")
+		end
+		if i < 3 then
+			io.write(".")
+		end
+	end
+end
+--]]
+io.write(" -o 1:4:255.255.255.255") -- /32 subnet mask
+
+-- TODO: find proper solution to obtain the value
+-- local uci = require('simple-uci').cursor()
+-- io.write(" -o 28:4:" .. uci:get('ddhcpd', 'broadcast', 'payload')) -- client subnet broadcast address
+-- io.write(" -o 28:4:10.126.255.255")
