@@ -53,7 +53,6 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    :maxdepth: 1
 
    package/gluon-client-bridge
-   package/gluon-config-mode-contact-info
    package/gluon-config-mode-geo-location
    package/gluon-ebtables-filter-multicast
    package/gluon-ebtables-filter-ra-dhcp
@@ -64,6 +63,7 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    :caption: Releases
    :maxdepth: 1
 
+   releases/v2017.1.8
    releases/v2017.1.7
    releases/v2017.1.6
    releases/v2017.1.5
