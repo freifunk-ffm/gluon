@@ -1,3 +1,0 @@
-#!/usr/bin/lua
-require "gluon.web.cgi"
-gluon.web.cgi.run()

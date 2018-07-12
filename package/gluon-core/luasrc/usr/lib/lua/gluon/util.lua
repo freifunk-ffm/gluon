@@ -13,16 +13,6 @@ local function do_filter_prefix(input, output, prefix)
 	return f
 end
 
-local function close_stdio(stream, mode)
-	local null = nixio.open('/dev/null', mode)
-	if null then
-		nixio.dup(null, nixio[stream])
-		if null:fileno() > 2 then
-			null:close()
-		end
-	end
-end
-
 
 local io = io
 local os = os
@@ -35,7 +25,7 @@ local table = table
 local nixio = require 'nixio'
 local hash = require 'hash'
 local sysconfig = require 'gluon.sysconfig'
-local site = require 'gluon.site_config'
+local site = require 'gluon.site'
 local fs = require 'nixio.fs'
 
 
@@ -76,23 +66,6 @@ function remove_from_set(t, itm)
 	return changed
 end
 
-function exec(...)
-	local pid, errno, error = nixio.fork()
-	if pid == 0 then
-		close_stdio('stdin', 'r')
-		close_stdio('stdout', 'w')
-		close_stdio('stderr', 'w')
-
-		nixio.execp(...)
-		os.exit(127)
-	elseif pid > 0 then
-		local wpid, status, code = nixio.waitpid(pid)
-		return wpid and status == 'exited' and code
-	else
-		return nil, errno, error
-	end
-end
-
 -- Removes all lines starting with a prefix from a file, optionally adding a new one
 function replace_prefix(file, prefix, add)
 	local tmp = file .. '.tmp'
@@ -110,16 +83,36 @@ function readline(fd)
 	return line
 end
 
-function lock(file)
-	exec('lock', file)
-end
+function exec(command)
+	local pp   = io.popen(command)
+	local data = pp:read("*a")
+	pp:close()
 
-function unlock(file)
-	exec('lock', '-u', file)
+	return data
 end
 
 function node_id()
 	return string.gsub(sysconfig.primary_mac, ':', '')
+end
+
+function default_hostname()
+	return site.hostname_prefix('') .. node_id()
+end
+
+function domain_seed_bytes(key, length)
+	local ret = ''
+	local v = ''
+	local i = 0
+
+	-- Inspired by HKDF key expansion, but much simpler, as we don't need
+	-- cryptographic strength
+	while ret:len() < 2*length do
+		i = i + 1
+		v = hash.md5(v .. key .. site.domain_seed():lower() .. i)
+		ret = ret .. v
+	end
+
+	return ret:sub(0, 2*length)
 end
 
 function get_mesh_devices(uconn)
@@ -165,7 +158,7 @@ function find_phy(config)
 end
 
 local function get_addresses(uci, radio)
-	local phy = find_phy(uci:get_all('wireless', radio))
+	local phy = find_phy(radio)
 	if not phy then
 		return function() end
 	end
@@ -234,17 +227,15 @@ end
 -- Iterate over all radios defined in UCI calling
 -- f(radio, index, site.wifiX) for each radio found while passing
 --  site.wifi24 for 2.4 GHz devices and site.wifi5 for 5 GHz ones.
-function iterate_radios(uci, f)
+function foreach_radio(uci, f)
 	local radios = {}
 
-	uci:foreach('wireless', 'wifi-device',
-	function(s)
-		table.insert(radios, s['.name'])
-	end
-	)
+	uci:foreach('wireless', 'wifi-device', function(radio)
+		table.insert(radios, radio)
+	end)
 
 	for index, radio in ipairs(radios) do
-		local hwmode = uci:get('wireless', radio, 'hwmode')
+		local hwmode = radio.hwmode
 
 		if hwmode == '11g' or hwmode == '11ng' then
 			f(radio, index, site.wifi24)

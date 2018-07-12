@@ -25,8 +25,10 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    features/wired-mesh
    features/dns-forwarder
    features/monitoring
+   features/multidomain
    features/authorized-keys
    features/roles
+   features/vpn
 
 .. toctree::
    :caption: Developer Documentation
@@ -34,9 +36,11 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
 
    dev/basics
    dev/hardware
+   dev/packages
    dev/upgrade
    dev/wan
    dev/mac_addresses
+   dev/site_library
 
 .. toctree::
    :caption: gluon-web Reference
@@ -53,16 +57,20 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    :maxdepth: 1
 
    package/gluon-client-bridge
-   package/gluon-config-mode-geo-location
+   package/gluon-config-mode-domain-select
    package/gluon-ebtables-filter-multicast
    package/gluon-ebtables-filter-ra-dhcp
-   package/gluon-ebtables-segment-mld
+   package/gluon-ebtables-limit-arp
    package/gluon-ebtables-source-filter
+   package/gluon-radv-filterd
+   package/gluon-web-admin
+   package/gluon-web-logging
 
 .. toctree::
    :caption: Releases
    :maxdepth: 1
 
+   releases/v2018.1
    releases/v2017.1.8
    releases/v2017.1.7
    releases/v2017.1.6
@@ -108,6 +116,7 @@ ar71xx-generic
 * ALFA Network
 
   - AP121
+  - AP121F
   - AP121U
   - Hornet-UB
   - Tube2H
@@ -117,6 +126,10 @@ ar71xx-generic
 * Allnet
 
   - ALL0315N
+
+* AVM
+
+  - Fritz!Box 4020
 
 * Buffalo
 
@@ -128,7 +141,6 @@ ar71xx-generic
 * D-Link
 
   - DIR-505 (A1, A2)
-  - DIR-615 (C1)
   - DIR-825 (B1)
 
 * GL Innovations
@@ -145,7 +157,7 @@ ar71xx-generic
 
 * Netgear
 
-  - WNDR3700 (v1, v2)
+  - WNDR3700 (v1, v2, v5)
   - WNDR3800
   - WNDRMAC (v2)
 
@@ -155,11 +167,13 @@ ar71xx-generic
 
 * OpenMesh
 
+  - A40
+  - A60
   - MR600 (v1, v2)
   - MR900 (v1, v2)
   - MR1750 (v1, v2) [#ath10k]_
-  - OM2P (v1, v2)
-  - OM2P-HS (v1, v2, v3)
+  - OM2P (v1, v2, v4)
+  - OM2P-HS (v1, v2, v3, v4)
   - OM2P-LC
   - OM5P
   - OM5P-AN
@@ -168,8 +182,9 @@ ar71xx-generic
 * TP-Link
 
   - Archer C5 (v1) [#ath10k]_
+  - Archer C59 (v1) [#80211s]_
   - Archer C7 (v2, v4) [#ath10k]_
-  - CPE210 (v1.0, v1.1)
+  - CPE210 (v1.0, v1.1, v2.0)
   - CPE220 (v1.1)
   - CPE510 (v1.0, v1.1)
   - CPE520 (v1.1)
@@ -202,6 +217,7 @@ ar71xx-generic
   - UniFi AC Mesh [#ath10k]_
   - UniFi AP
   - UniFi AP AC Lite [#ath10k]_
+  - UniFi AP AC LR [#ath10k]_
   - UniFi AP AC Pro [#ath10k]_
   - UniFi AP LR
   - UniFi AP Pro
@@ -213,10 +229,6 @@ ar71xx-generic
   - My Net N600
   - My Net N750
 
-.. [#ath10k]
-  Device uses the ath10k WLAN driver; no image is built unless GLUON_ATH10K_MESH
-  is set as described in :ref:`getting-started-make-variables`
-
 ar71xx-nand
 ^^^^^^^^^^^
 
@@ -224,6 +236,10 @@ ar71xx-nand
 
   - WNDR3700 (v4)
   - WNDR4300 (v1)
+
+* ZyXEL
+
+  - NBG6716 [#ath10k]_
 
 ar71xx-tiny
 ^^^^^^^^^^^
@@ -246,7 +262,7 @@ ar71xx-tiny
   - TL-WA830RE (v1, v2)
   - TL-WA850RE (v1)
   - TL-WA860RE (v1)
-  - TL-WA901N/ND (v1, v2, v3, v4)
+  - TL-WA901N/ND (v1, v2, v3, v4, v5)
   - TL-WA7210N (v2)
   - TL-WA7510N (v1)
   - TL-WR703N (v1)
@@ -269,12 +285,64 @@ brcm2708-bcm2709
 
 * RaspberryPi 2
 
+ipq806x
+^^^^^^^
+
+* TP-Link
+
+  - Archer C2600 [#80211s]_
+
 mpc85xx-generic
 ^^^^^^^^^^^^^^^
 
 * TP-Link
 
   - TL-WDR4900 (v1)
+
+ramips-mt7620
+^^^^^^^^^^^^^
+
+* GL Innovations
+
+  - GL-MT300A [#80211s]_
+  - GL-MT300N [#80211s]_
+  - GL-MT750 [#80211s]_
+
+ramips-mt7621
+^^^^^^^^^^^^^
+
+* Ubiquiti
+
+  - EdgeRouter X
+  - EdgeRouter X-SFP
+
+ramips-mt7628
+^^^^^^^^^^^^^
+
+* VoCore
+
+  - VoCore2 [#80211s]_
+
+ramips-rt305x
+^^^^^^^^^^^^^
+
+* A5-V11 [#80211s]_
+
+* D-Link
+
+  - DIR-615 (D1, D2, D3, D4, H1) [#80211s]_
+
+* VoCore
+
+  - VoCore (8M) [#80211s]_
+  - VoCore (16M) [#80211s]_
+
+sunxi
+^^^^^
+
+* LeMaker
+
+  - Banana Pi M1
 
 x86-generic
 ^^^^^^^^^^^
@@ -300,6 +368,17 @@ x86-64
 * x86-64-vmware
 
 See also: :doc:`user/x86`
+
+Footnotes
+^^^^^^^^^
+
+.. [#ath10k]
+  Device uses the ath10k WLAN driver; images are built for 11s by default unless GLUON_WLAN_MESH
+  is set as described in :ref:`getting-started-make-variables`
+
+.. [#80211s]
+  Device does not support IBSS; images are built by default unless GLUON_WLAN_MESH
+  is explicitly set to something other than *11s*
 
 License
 -------

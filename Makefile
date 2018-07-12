@@ -5,12 +5,27 @@ LANG:=C
 export LC_ALL LANG
 
 
-GLUON_SITEDIR ?= $(CURDIR)/site
-GLUON_TMPDIR ?= $(CURDIR)/tmp
+# initialize (possibly already user set) directory variables
+GLUON_SITEDIR ?= site
+GLUON_TMPDIR ?= tmp
+GLUON_OUTPUTDIR ?= output
 
-GLUON_OUTPUTDIR ?= $(CURDIR)/output
 GLUON_IMAGEDIR ?= $(GLUON_OUTPUTDIR)/images
 GLUON_PACKAGEDIR ?= $(GLUON_OUTPUTDIR)/packages
+
+# check for spaces & resolve possibly relative paths
+define mkabspath
+ ifneq (1,$(words [$($(1))]))
+  $$(error $(1) must not contain spaces)
+ endif
+ override $(1) := $(abspath $($(1)))
+endef
+
+$(eval $(call mkabspath,GLUON_SITEDIR))
+$(eval $(call mkabspath,GLUON_TMPDIR))
+$(eval $(call mkabspath,GLUON_OUTPUTDIR))
+$(eval $(call mkabspath,GLUON_IMAGEDIR))
+$(eval $(call mkabspath,GLUON_PACKAGEDIR))
 
 export GLUON_TMPDIR GLUON_IMAGEDIR GLUON_PACKAGEDIR DEVICES
 
@@ -20,11 +35,16 @@ $(GLUON_SITEDIR)/site.mk:
 
 include $(GLUON_SITEDIR)/site.mk
 
-
 GLUON_RELEASE ?= $(error GLUON_RELEASE not set. GLUON_RELEASE can be set in site.mk or on the command line)
 
+GLUON_MULTIDOMAIN ?= 0
+GLUON_WLAN_MESH ?= 11s
+GLUON_DEBUG ?= 0
 
-export GLUON_RELEASE GLUON_ATH10K_MESH GLUON_REGION GLUON_DEBUG
+export GLUON_RELEASE GLUON_REGION GLUON_MULTIDOMAIN GLUON_WLAN_MESH GLUON_DEBUG
+
+show-release:
+	@echo '$(GLUON_RELEASE)'
 
 show-release:
 	@echo '$(GLUON_RELEASE)'
@@ -60,6 +80,15 @@ LEDEMAKE = $(MAKE) -C lede
 
 BOARD := $(GLUON_TARGET_$(GLUON_TARGET)_BOARD)
 SUBTARGET := $(GLUON_TARGET_$(GLUON_TARGET)_SUBTARGET)
+
+GLUON_CONFIG_VARS := \
+	GLUON_SITEDIR='$(GLUON_SITEDIR)' \
+	GLUON_RELEASE='$(GLUON_RELEASE)' \
+	GLUON_BRANCH='$(GLUON_BRANCH)' \
+	GLUON_LANGS='$(GLUON_LANGS)' \
+	BOARD='$(BOARD)' \
+	SUBTARGET='$(SUBTARGET)'
+
 LEDE_TARGET := $(BOARD)$(if $(SUBTARGET),-$(SUBTARGET))
 
 export LEDE_TARGET
@@ -70,12 +99,21 @@ CheckTarget := [ '$(LEDE_TARGET)' ] \
 
 CheckExternal := test -d lede || (echo 'You don'"'"'t seem to have obtained the external repositories needed by Gluon; please call `make update` first!'; false)
 
+define CheckSite
+	@GLUON_SITEDIR='$(GLUON_SITEDIR)' GLUON_SITE_CONFIG='$(1).conf' $(LUA) scripts/site_config.lua \
+		|| (echo 'Your site configuration ($(1).conf) did not pass validation.'; false)
+
+endef
 
 list-targets: FORCE
 	@$(foreach target,$(GLUON_TARGETS),echo '$(target)';)
 
 
-GLUON_DEFAULT_PACKAGES := -odhcpd -ppp -ppp-mod-pppoe -wpad-mini gluon-core ip6tables hostapd-mini
+GLUON_FEATURE_PACKAGES := $(shell scripts/features.sh '$(GLUON_FEATURES)' || echo '__ERROR__')
+ifneq ($(filter __ERROR__,$(GLUON_FEATURE_PACKAGES)),)
+$(error Error while evaluating GLUON_FEATURES)
+endif
+
 
 GLUON_PACKAGES :=
 define merge_packages
@@ -83,31 +121,19 @@ define merge_packages
     GLUON_PACKAGES := $$(strip $$(filter-out -$$(patsubst -%,%,$(pkg)) $$(patsubst -%,%,$(pkg)),$$(GLUON_PACKAGES)) $(pkg))
   )
 endef
-$(eval $(call merge_packages,$(GLUON_DEFAULT_PACKAGES) $(GLUON_SITE_PACKAGES)))
-
-GLUON_PACKAGES_YES := $(filter-out -%,$(GLUON_PACKAGES))
-GLUON_PACKAGES_NO := $(patsubst -%,%,$(filter -%,$(GLUON_PACKAGES)))
-
+$(eval $(call merge_packages,$(GLUON_FEATURE_PACKAGES) $(GLUON_SITE_PACKAGES)))
 
 config: FORCE
 	@$(CheckExternal)
 	@$(CheckTarget)
 
-	@( \
-		echo 'CONFIG_TARGET_$(BOARD)=y' \
-		$(if $(SUBTARGET),&& echo 'CONFIG_TARGET_$(BOARD)_$(SUBTARGET)=y') \
-		$(foreach pkg,$(GLUON_PACKAGES_NO),&& echo '# CONFIG_PACKAGE_$(pkg) is not set') \
-		&& scripts/target_config.sh generic \
-		&& GLUON_SITEDIR='$(GLUON_SITEDIR)' scripts/target_config.sh '$(GLUON_TARGET)' \
-		$(foreach pkg,$(GLUON_PACKAGES_YES),&& echo 'CONFIG_PACKAGE_$(pkg)=y') \
-		$(foreach lang,$(GLUON_LANGS),&& echo 'CONFIG_GLUON_WEB_LANG_$(lang)=y') \
-		&& echo 'CONFIG_GLUON_RELEASE="$(GLUON_RELEASE)"' \
-		&& echo 'CONFIG_GLUON_SITEDIR="$(GLUON_SITEDIR)"' \
-		&& echo 'CONFIG_GLUON_BRANCH="$(GLUON_BRANCH)"' \
-	) > lede/.config
+	@$(GLUON_CONFIG_VARS) \
+		scripts/target_config.sh '$(GLUON_TARGET)' '$(GLUON_PACKAGES)' \
+		> lede/.config
 	+@$(LEDEMAKE) defconfig
 
-	@GLUON_SITEDIR='$(GLUON_SITEDIR)' scripts/target_config_check.sh '$(GLUON_TARGET)' '$(GLUON_PACKAGES_YES)'
+	@$(GLUON_CONFIG_VARS) \
+		scripts/target_config_check.sh '$(GLUON_TARGET)' '$(GLUON_PACKAGES)'
 
 
 LUA := lede/staging_dir/hostpkg/bin/lua
@@ -122,8 +148,7 @@ $(LUA):
 prepare-target: config $(LUA) ;
 
 all: prepare-target
-	@GLUON_SITEDIR='$(GLUON_SITEDIR)' $(LUA) scripts/site_config.lua \
-                || (echo 'Your site configuration did not pass validation.'; false)
+	$(foreach conf,site $(patsubst $(GLUON_SITEDIR)/%.conf,%,$(wildcard $(GLUON_SITEDIR)/domains/*.conf)),$(call CheckSite,$(conf)))
 
 	@scripts/clean_output.sh
 	+@$(LEDEMAKE)

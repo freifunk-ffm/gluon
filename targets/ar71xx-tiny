@@ -1,3 +1,5 @@
+config 'CONFIG_GLUON_SPECIALIZE_KERNEL=y'
+
 no_opkg
 packages '-uboot-envtools' '-kmod-usb-core' '-kmod-usb-ohci' '-kmod-usb2' '-kmod-usb-ledtrig-usbport'
 
@@ -35,6 +37,10 @@ device tp-link-tl-wr743n-nd-v2 tl-wr743nd-v2
 device tp-link-tl-wa801n-nd-v1 tl-wa801nd-v1
 device tp-link-tl-wa801n-nd-v2 tl-wa801nd-v2
 device tp-link-tl-wa801n-nd-v3 tl-wa801nd-v3
+
+if [ "$BROKEN" ]; then
+device tp-link-tl-wr802n-v1 tl-wr802n-v1 # BROKEN: Untested
+fi
 
 device tp-link-tl-wr841n-nd-v3 tl-wr841-v3
 device tp-link-tl-wr841n-nd-v5 tl-wr841-v5
@@ -83,6 +89,7 @@ device tp-link-tl-wa901n-nd-v1 tl-wa901nd-v1
 device tp-link-tl-wa901n-nd-v2 tl-wa901nd-v2
 device tp-link-tl-wa901n-nd-v3 tl-wa901nd-v3
 device tp-link-tl-wa901n-nd-v4 tl-wa901nd-v4
+device tp-link-tl-wa901n-nd-v5 tl-wa901nd-v5
 
 device tp-link-tl-mr13u-v1 tl-mr13u-v1
 
