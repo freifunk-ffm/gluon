@@ -46,9 +46,6 @@ export GLUON_RELEASE GLUON_REGION GLUON_MULTIDOMAIN GLUON_WLAN_MESH GLUON_DEBUG
 show-release:
 	@echo '$(GLUON_RELEASE)'
 
-show-release:
-	@echo '$(GLUON_RELEASE)'
-
 
 update: FORCE
 	@GLUON_SITEDIR='$(GLUON_SITEDIR)' scripts/update.sh
