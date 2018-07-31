@@ -8,7 +8,7 @@ Gluon's releases are managed using `Git tags`_. If you are just getting
 started with Gluon we recommend to use the latest stable release of Gluon.
 
 Take a look at the `list of gluon releases`_ and notice the latest release,
-e.g. *v2017.1.8*. Always get Gluon using git and don't try to download it
+e.g. *v2018.1*. Always get Gluon using git and don't try to download it
 as a Zip archive as the archive will be missing version information.
 
 Please keep in mind that there is no "default Gluon" build; a site configuration
@@ -43,7 +43,7 @@ Building the images
 -------------------
 
 To build Gluon, first check out the repository. Replace *RELEASE* with the
-version you'd like to checkout, e.g. *v2017.1.8*.
+version you'd like to checkout, e.g. *v2018.1*.
 
 ::
 
@@ -90,7 +90,7 @@ In case of errors read the messages carefully and try to fix the stated issues (
 ``ar71xx-generic`` is the most common target and will generate images for most of the supported hardware.
 To see a complete list of supported targets, call ``make`` without setting ``GLUON_TARGET``.
 
-You should reserve about 10GB of disk space for each `GLUON_TARGET`.
+You should generally reserve 5GB of disk space and additionally about 10GB for each `GLUON_TARGET`.
 
 The built images can be found in the directory `output/images`. Of these, the `factory`
 images are to be used when flashing from the original firmware a device came with,
@@ -155,14 +155,6 @@ usually be set on the command line or in ``site.mk``.
 Common variables
 ................
 
-GLUON_ATH10K_MESH
-  While Gluon does support some hardware with ath10k-based 5GHz WLAN, these WLAN adapters don't work
-  well for meshing at the moment, so building images for these models is disabled by default. In addition,
-  ath10k can't support IBSS and 11s meshing in the same image due to WLAN firmware restrictions.
-
-  Setting GLUON_ATH10K_MESH to ``11s`` or ``ibss`` will enable generation of images for ath10k devices
-  and install the firmware for the corresponding WLAN mode.
-
 GLUON_BRANCH
   Sets the default branch of the autoupdater. If unset, the autoupdater is disabled
   by default. For the ``make manifest`` command, GLUON_BRANCH defines the branch to
@@ -184,7 +176,8 @@ GLUON_REGION
 GLUON_RELEASE
   Firmware release number: This string is displayed in the config mode, announced
   via respondd/alfred and used by the autoupdater to decide if a newer version
-  is available.
+  is available. The same GLUON_RELEASE has to be passed to ``make`` and ``make manifest``
+  to generate a correct manifest.
 
 GLUON_TARGET
   Target architecture to build.

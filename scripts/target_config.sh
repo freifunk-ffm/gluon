@@ -4,6 +4,9 @@ set -e
 
 [ "$LEDE_TARGET" ] || exit 1
 
+target="$1"
+packages=$2
+
 
 output=
 profile=
@@ -35,6 +38,10 @@ config() {
 	echo "$1"
 }
 
+try_config() {
+	echo "$1"
+}
+
 device() {
 	emit
 
@@ -55,7 +62,7 @@ packages() {
 
 		for package in "$@"; do
 			if [ "${package:0:1}" = '-' ]; then
-				echo "CONFIG_PACKAGE_${package:1}=m"
+				echo "# CONFIG_PACKAGE_${package:1} is not set"
 			else
 				echo "CONFIG_PACKAGE_${package}=y"
 			fi
@@ -66,4 +73,10 @@ packages() {
 
 # The sort will not only remove duplicate entries,
 # but also magically make =y entries override =m ones
-(. targets/"$1"; emit) | sort -u
+(
+	. targets/generic
+	packages $packages
+
+	. targets/"$target"
+	emit
+) | sort -u

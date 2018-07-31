@@ -1,36 +1,46 @@
 #!/usr/bin/lua
-local site = require 'gluon.site_config'
+
+local site = require 'gluon.site'
 local uci = require('simple-uci').cursor()
 
-dnsmasq=uci:get_first("dhcp", "dnsmasq")
+local dns = site.dns({})
+local next_node = site.next_node({})
+
+local dnsmasq = uci:get_first("dhcp", "dnsmasq")
 
 uci:set('dhcp', dnsmasq, 'localise_queries', true)
 uci:set('dhcp', dnsmasq, 'localservice', false)
 
-if site.dns and site.dns.servers then
-	uci:set('dhcp', dnsmasq, 'server', site.dns.servers)
-else
-	uci:delete('dhcp', dnsmasq, 'server')
-end
-
+uci:set('dhcp', dnsmasq, 'server', dns.servers)
 uci:delete('dhcp', dnsmasq, 'cachesize')
 
-if site.next_node and site.next_node.name and site.next_node.ip4 then
-	uci:section('dhcp','domain','nextnode4',{
-		name=site.next_node.name,
-		ip=site.next_node.ip4,
+uci:delete('firewall', 'client_dns')
+if dns.servers then
+	-- allow inbound traffic for dns from client zone
+	uci:section('firewall', 'rule', 'client_dns', {
+		src = 'local_client',
+		dest_port = '53',
+		proto = 'tcpudp',
+		target = 'ACCEPT',
 	})
-else
-	uci:delete('dhcp', 'domain', 'nextnode4')
 end
 
-if site.next_node and site.next_node.name and site.next_node.ip6 then
-	uci:section('dhcp','domain','nextnode6',{
-		name=site.next_node.name,
-		ip=site.next_node.ip6,
+local function set_dns_record(name, ip, sectionname)
+	if not ip then return end
+	uci:section('dhcp', 'domain', sectionname, {
+		name = name,
+		ip = ip,
 	})
-else
-	uci:delete('dhcp', 'domain', 'nextnode6')
 end
+
+uci:delete_all('dhcp', 'domain', function(s)
+	return (s['.name'] and string.match(s['.name'], "^nextnode[46]"))
+end)
+
+for i, name in ipairs(next_node.name or {}) do
+	set_dns_record(name, next_node.ip4, 'nextnode4_' .. i)
+	set_dns_record(name, next_node.ip6, 'nextnode6_' .. i)
+end
+
 uci:save('dhcp')
-
+uci:save('firewall')
