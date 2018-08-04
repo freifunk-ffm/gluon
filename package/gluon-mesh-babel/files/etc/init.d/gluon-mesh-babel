@@ -39,12 +39,14 @@ waitforsocket() {
 reload_service() {
 	waitforsocket
 
+	loaddress=$(ubus call network.interface dump | jsonfilter -e "@.interface[@.interface='loopback'].*[@.mask=128].address")
+
 	for i in $(ubus call network.interface dump | jsonfilter -e "@.interface[@.proto='gluon_mesh' && @.up=true].device")
 	do
-	if ! echotobabel dump|grep "add interface"|grep -q $i
-	then
-		echotobabel "interface $i update-interval 300"
-	fi
+		if ! echotobabel dump|grep -q "add interface $i"
+		then
+			echotobabel "interface $i update-interval 300 pref-src $loaddress"
+		fi
 	done
 
 	for i in $(echotobabel "dump"|grep "add interface"|cut -d" " -f3)
