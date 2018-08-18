@@ -1,0 +1,51 @@
+#!/bin/sh
+run_broker() {
+  local interface="$1"
+  local pubkey="$2"
+  local port
+  local interval=5
+
+  remote=$(wg show $interface endpoints|cut -d: -f1|awk '{print $2}')
+  group_peers=$(uci show wireguard|grep mesh_vpn_backbone_peer|grep =peer|cut -d"." -f2|cut -d= -f1)
+
+  for i in $group_peers
+  do
+    if [ $interface == $(uci get wireguard.$i.ifname) ]; then
+      thispeer=$i
+      break;
+    fi
+  done
+  remote=$(uci get wireguard.$thispeer.remote)
+
+  localport=$(wg show $interface listen-port)
+
+  while [[ "x$port" == "x" ]]
+  do
+    serverreply="$(echo "{\"pubkey\":\"$pubkey\", \"localport\":$localport }" | /usr/bin/netcat $remote 40000)"
+    port=$(jsonfilter -s "$serverreply" -e "@.port")
+    if [[ -z $port ]]
+    then
+      error=$(jsonfilter -s "$serverreply" -e "@.error")
+      if [[ -n $error ]]; then
+	reason=$(jsonfilter -s "$serverreply" -e "@.error.reason")
+	ecode=$(jsonfilter -s "$serverreply" -e "@.error.code")
+	echo "received error [$ecode] from host $remote: $reason" >&2
+
+	if [[ "$ecode" == "1" ]] ; then
+	  echo FULL
+	  exit 1
+	fi
+      fi
+
+    fi
+    if [[ $interval -lt 400 ]]; then
+      interval=$((interval*2))
+    fi
+    sleep $interval
+  done
+
+  peerpubkey=$(uci get wireguard.$thispeer.key)
+  echo $port
+}
+
+run_broker $1 $(wg pubkey </lib/gluon/mesh-vpn/wireguard)

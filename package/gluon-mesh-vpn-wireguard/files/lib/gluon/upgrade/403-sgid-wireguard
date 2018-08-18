@@ -1,0 +1,8 @@
+#!/bin/sh
+# allow wg and nc to use the WAN-upstsream resolver
+
+chgrp gluon-mesh-vpn /usr/bin/wg
+chmod g+s /usr/bin/wg
+
+chgrp gluon-mesh-vpn /usr/bin/netcat
+chmod g+s /usr/bin/netcat

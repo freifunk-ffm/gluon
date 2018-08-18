@@ -1,0 +1,10 @@
+#!/usr/bin/lua
+local uci = require('simple-uci').cursor()
+
+uci:foreach('wireguard', 'peer', function(peer)
+    if peer.net == uci:get('wireguard', 'mesh_vpn_backbone', 'net') then
+      -- TODO: Will this kill existing connections if the interface already is up?
+      os.execute('ifup ' .. peer.ifname .. 'w')
+    end
+end) 
+

@@ -1,0 +1,36 @@
+#!/bin/sh
+
+curtime=$(date +%s)
+WG=wg
+
+get_wg_interfaces() {
+    $WG show interfaces |grep babel-wg
+}
+
+get_connection_count() {
+    interfaces=( $(get_wg_interfaces) )
+    echo ${#interface[@]}
+}
+
+
+
+# purge wg interface that have terminated
+for i in $(wg show interfaces)
+do
+  line=$(wg show $i latest-handshakes)
+  if [[ "x$line" != "x" ]]
+  then
+    latest=${line##* }
+    diff=$((curtime-latest))
+    if [[ $diff -gt 600 ]]
+    then
+      ifdown ${i}w
+      ifup ${i}w
+    fi
+  fi
+done
+
+# make sure we are running enough wg connections: in case less than our peer-limit connections is "up", start all wg interfaces
+if [[ $(get_connection_count) -ge $(uci get wireguard.mesh_vpn_backbone.peer_limit) ]]; then
+  enable-all-wg-interfaces
+fi

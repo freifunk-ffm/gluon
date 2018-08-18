@@ -1,0 +1,6 @@
+#!/bin/sh
+sfile=/lib/gluon/mesh-vpn/wireguard
+if ! wg pubkey < $sfile >/dev/null 2>&1
+then
+  wg genkey > $sfile
+fi
