@@ -2,9 +2,10 @@ local unistd = require 'posix.unistd'
 
 local has_fastd = unistd.access('/lib/gluon/mesh-vpn/fastd')
 local has_tunneldigger = unistd.access('/lib/gluon/mesh-vpn/tunneldigger')
+local has_wireguard = unistd.access('/lib/gluon/mesh-vpn/wireguard')
 
 return function(form, uci)
-	if not (has_fastd or has_tunneldigger) then
+	if not (has_fastd or has_tunneldigger or has_wireguard) then
 		return
 	end
 
@@ -24,7 +25,7 @@ return function(form, uci)
 	local o
 
 	local meshvpn = s:option(Flag, "meshvpn", pkg_i18n.translate("Use internet connection (mesh VPN)"))
-	meshvpn.default = uci:get_bool("fastd", "mesh_vpn", "enabled") or uci:get_bool("tunneldigger", "mesh_vpn", "enabled")
+	meshvpn.default = uci:get_bool("fastd", "mesh_vpn", "enabled") or uci:get_bool("tunneldigger", "mesh_vpn", "enabled") or uci:get_bool("wireguard", "mesh_vpn", "enabled")
 	function meshvpn:write(data)
 		if has_fastd then
 			uci:set("fastd", "mesh_vpn", "enabled", data)
@@ -32,15 +33,26 @@ return function(form, uci)
 		if has_tunneldigger then
 			uci:set("tunneldigger", "mesh_vpn", "enabled", data)
 		end
+		if has_wireguard then
+			uci:set("wireguard", "mesh_vpn", "enabled", data)
+		end
 	end
 
 	local limit = s:option(Flag, "limit_enabled", pkg_i18n.translate("Limit bandwidth"))
 	limit:depends(meshvpn, true)
 	limit.default = uci:get_bool("simple-tc", "mesh_vpn", "enabled")
 	function limit:write(data)
-		uci:set("simple-tc", "mesh_vpn", "interface")
-		uci:set("simple-tc", "mesh_vpn", "enabled", data)
-		uci:set("simple-tc", "mesh_vpn", "ifname", "mesh-vpn")
+		if has_tunneldigger or has_fastd then
+			uci:set("simple-tc", "mesh_vpn", "interface")
+			uci:set("simple-tc", "mesh_vpn", "enabled", data)
+			uci:set("simple-tc", "mesh_vpn", "ifname", "mesh-vpn")
+		elseif has_wireguard then
+			uci:foreach('wireguard', 'peer', function(peer)
+				uci:set("simple-tc", peer.ifname, "interface")
+				uci:set("simple-tc", peer.ifname, "enabled", data)
+				uci:set("simple-tc", peer.ifname, "ifname", peer.ifname)
+			end)
+		end
 		if not data and has_tunneldigger then
 			uci:delete("tunneldigger", "mesh_vpn", "limit_bw_down")
 		end
@@ -59,6 +71,11 @@ return function(form, uci)
 			uci:set("tunneldigger", "mesh_vpn", "limit_bw_down", data)
 		else
 			uci:set("simple-tc", "mesh_vpn", "limit_ingress", data)
+			if has_wireguard then
+				uci:foreach('wireguard', 'peer', function(peer)
+					uci:set("simple-tc", peer.ifname, "limit_ingress", data)
+				end)
+			end
 		end
 	end
 
@@ -68,7 +85,12 @@ return function(form, uci)
 	o.datatype = "uinteger"
 	function o:write(data)
 		uci:set("simple-tc", "mesh_vpn", "limit_egress", data)
+		if has_wireguard then
+			uci:foreach('wireguard', 'peer', function(peer)
+				uci:set("simple-tc", peer.ifname, "limit_egress", data)
+			end)
+		end
 	end
 
-	return {'fastd', 'tunneldigger', 'simple-tc'}
+	return {'fastd', 'tunneldigger', 'wireguard', 'simple-tc'}
 end
