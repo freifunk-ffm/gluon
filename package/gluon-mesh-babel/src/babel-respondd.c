@@ -219,15 +219,16 @@ static bool handle_neighbour(char **data, void *obj) {
 
 		struct json_object *nif = 0;
 		if (data[IF] && !json_object_object_get_ex(obj, data[IF], &nif)) {
-			nif = json_object_new_object();
-
 			unsigned char ifmac[6] = {};
 			char str_ip[INET6_ADDRSTRLEN] = {};
 
 			if (obtain_ifmac(ifmac, (const char*)data[IF])) {
-				printf("could not obtain mac for device: %s", data[IF]);
+				printf("could not obtain mac for device: %s - continuing", data[IF]);
 				return false;
 			}
+
+			nif = json_object_new_object();
+
 			struct in6_addr lladdr = mac2ipv6(ifmac, "fe80::");
 			inet_ntop(AF_INET6, &lladdr.s6_addr, str_ip, INET6_ADDRSTRLEN);
 
