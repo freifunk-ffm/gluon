@@ -368,18 +368,27 @@ static struct json_object * get_babeld_version(void) {
 
 static struct json_object * respondd_provider_nodeinfo(void) {
 	bhelper_ctx.debug=false;
+	printf("1\n");
 	struct json_object *ret = json_object_new_object();
+	printf("2\n");
 
 	struct json_object *network = json_object_new_object();
+	printf("3\n");
 	json_object_object_add(network, "addresses", get_addresses());
+	printf("4\n");
 	json_object_object_add(network, "mesh", get_mesh());
+	printf("5\n");
 	json_object_object_add(ret, "network", network);
+	printf("6\n");
 
 	struct json_object *software = json_object_new_object();
 	struct json_object *software_babeld = json_object_new_object();
 	json_object_object_add(software_babeld, "version", get_babeld_version());
+	printf("7\n");
 	json_object_object_add(software, "babeld", software_babeld);
+	printf("8\n");
 	json_object_object_add(ret, "software", software);
+	printf("9\n");
 
 	return ret;
 }
