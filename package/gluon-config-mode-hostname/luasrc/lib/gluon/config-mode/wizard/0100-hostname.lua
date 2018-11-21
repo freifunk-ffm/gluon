@@ -23,7 +23,7 @@ return function(form, uci)
 		o.optional = true
 		o.placeholder = default_hostname
 	end
-	if configured or site.config_mode.hostname.prefill(true) then
+	if configured then
 		o.default = current_hostname
 	end
 
