@@ -46,6 +46,22 @@ prefix6
 
        prefix6 = 'fdca::ffee:babe:1::/64'
 
+node_prefix6
+    The ipv6 prefix from which the unique IP-addresses for nodes are selected
+    in babel-based networks. This may overlap with prefix6. e.g.
+    ::
+
+       node_prefix6 = 'fdca::ffee:babe:2::/64'
+
+node_client_prefix6
+    The ipv6 prefix from which the client-specific IP-address is calculated that
+    is assigned to each node by l3roamd to allow efficient communication when 
+    roaming. This is exclusively useful when running a routing mesh protocol
+    like babel. e.g.
+    ::
+
+       node_client_prefix6 = 'fdca::ffee:babe:3::/64'
+
 timezone
     The timezone of your community live in, e.g.
     ::
@@ -67,8 +83,8 @@ opkg \: optional
 
     There are two optional fields in the ``opkg`` section:
 
-    - ``lede`` overrides the default LEDE repository URL. The default URL would
-      correspond to ``http://downloads.lede-project.org/snapshots/packages/%A``
+    - ``openwrt`` overrides the default OpenWrt repository URL. The default URL would
+      correspond to ``http://downloads.openwrt.org/snapshots/packages/%A``
       and usually doesn't need to be changed when nodes are expected to have IPv6
       internet connectivity.
     - ``extra`` specifies a table of additional repositories (with arbitrary keys)
@@ -76,7 +92,7 @@ opkg \: optional
     ::
 
       opkg = {
-        lede = 'http://opkg.services.ffac/lede/snapshots/packages/%A',
+        openwrt = 'http://opkg.services.ffac/openwrt/snapshots/packages/%A',
         extra = {
           gluon = 'http://opkg.services.ffac/modules/gluon-%GS-%GR/%S',
         },
@@ -84,8 +100,8 @@ opkg \: optional
 
     There are various patterns which can be used in the URLs:
 
-    - ``%n`` is replaced by the LEDE version codename
-    - ``%v`` is replaced by the LEDE version number (e.g. "17.01")
+    - ``%d`` is replaced by the OpenWrt distribution name ("openwrt")
+    - ``%v`` is replaced by the OpenWrt version number (e.g. "17.01")
     - ``%S`` is replaced by the target board (e.g. "ar71xx/generic")
     - ``%A`` is replaced by the target architecture (e.g. "mips_24kc")
     - ``%GS`` is replaced by the Gluon site code (as specified in ``site.conf``)
@@ -283,6 +299,9 @@ mesh_vpn
     and *gluon-mesh-vpn-tunneldigger* should be installed with the current
     implementation.
 
+    **Note:** It may be interesting to include the package *gluon-iptables-clamp-mss-to-pmtu*
+    in the build when using *gluon-mesh-babel* to work around icmp blackholes on the internet.
+
     ::
 
       mesh_vpn = {
@@ -399,6 +418,8 @@ autoupdater \: package
     All configured mirrors must be reachable from the nodes via IPv6. If you don't want to set an IPv6 address
     explicitly, but use a hostname (which is recommended), see also the :ref:`FAQ <faq-dns>`.
 
+.. _user-site-config_mode:
+
 config_mode \: optional
     Additional configuration for the configuration web interface. All values are
     optional.
@@ -407,10 +428,19 @@ config_mode \: optional
     and the node's primary MAC address is assigned. Manually setting a hostname
     can be enforced by setting *hostname.optional* to *false*.
 
-    By default, no altitude fields are shown by the *gluon-config-mode-geo-location*
-    package. If *geo_location.show_altitude* is set to *true*, the *gluon-config-mode:altitude-label*
-    and *gluon-config-mode:altitude-help* strings must be provided in the site i18n
-    data as well.
+    To not prefill the hostname-field in config-mode with the default hostname,
+    set *hostname.prefill* to *false*.
+
+    By default, no altitude field is shown by the *gluon-config-mode-geo-location*
+    package. Set *geo_location.show_altitude* to *true* if you want the altitude
+    field to be visible.
+
+    The *geo_location.osm* section is only relevant when the *gluon-config-mode-geo-location-osm*
+    package is used. The *center.lon* and *center.lat* values are mandatory in this case and
+    define the default center of the map when no position has been picked yet. The *zoom* level
+    defaults to 12 in this case. *openlayers_url* allows to override the base URL of the
+    *build/ol.js* and *css/ol.css* files (the default is
+    ``https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.2.0``).
 
     The remote login page only shows SSH key configuration by default. A
     password form can be displayed by setting *remote_login.show_password_form*
@@ -421,9 +451,18 @@ config_mode \: optional
         config_mode = {
           hostname = {
             optional = false,
+            prefill = true,
           },
           geo_location = {
             show_altitude = true,
+            osm = {
+              center = {
+                lat = 52.951947558,
+                lon = 8.744238281,
+              },
+              zoom = 13,
+              -- openlayers_url = 'http://ffac.example.org/openlayer',
+            },
           },
           remote_login = {
             show_password_form = true,
@@ -584,12 +623,6 @@ gluon-config-mode:pubkey
 gluon-config-mode:novpn
     Information shown on the reboot page, if the mesh VPN was not selected.
 
-gluon-config-mode:altitude-label
-    Label for the ``altitude`` field
-
-gluon-config-mode:altitude-help
-    Description for the usage of the ``altitude`` field
-
 gluon-config-mode:contact-help
     Description for the usage of the ``contact`` field
 
@@ -600,7 +633,10 @@ gluon-config-mode:hostname-help
     Description for the usage of the ``hostname`` field
 
 gluon-config-mode:geo-location-help
-    Description for the usage of the longitude/latitude fields
+    Description for the usage of the longitude/latitude fields (and altitude, if shown)
+
+gluon-config-mode:altitude-label
+    Label for the ``altitude`` field
 
 gluon-config-mode:reboot
     General information shown on the reboot page.

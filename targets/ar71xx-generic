@@ -1,6 +1,7 @@
 config 'CONFIG_GLUON_SPECIALIZE_KERNEL=y'
+config 'CONFIG_TARGET_SQUASHFS_BLOCK_SIZE=64'
 
-ATH10K_PACKAGES='-kmod-ath10k kmod-ath10k-ct'
+ATH10K_PACKAGES=
 ATH10K_PACKAGES_QCA9887=
 if [ "$GLUON_WLAN_MESH" = 'ibss' ]; then
 	ATH10K_PACKAGES='-kmod-ath10k kmod-ath10k-ct -ath10k-firmware-qca988x ath10k-firmware-qca988x-ct'
@@ -34,8 +35,13 @@ factory
 
 
 # AVM
+
 device avm-fritz-box-4020 fritz4020 fritz4020
 factory
+
+device avm-fritz-wlan-repeater-450e fritz450e
+factory
+
 
 # Buffalo
 
@@ -81,13 +87,12 @@ device linksys-wrt160nl wrt160nl WRT160NL
 
 # Meraki
 
-# BROKEN: MAC address uniqueness issues
 if [ "$BROKEN" ]; then
-device meraki-mr12 mr12
+device meraki-mr12 mr12 # BROKEN: MAC address uniqueness issues
 alias meraki-mr62
 factory
 
-device meraki-mr16 mr16
+device meraki-mr16 mr16 # BROKEN: MAC address uniqueness issues
 alias meraki-mr66
 factory
 fi
@@ -114,6 +119,12 @@ factory .img
 device netgear-wnr2200 wnr2200 WNR2200 # BROKEN: Untested
 factory .img
 fi
+
+
+# OCEDO
+
+device ocedo-koala koala
+factory
 
 
 # Onion
@@ -156,25 +167,23 @@ packages $ATH10K_PACKAGES
 
 # TP-Link
 
-device tp-link-cpe210-v1.0 cpe210-220
+device tp-link-cpe210-v1.0 cpe210-220-v1
 alias tp-link-cpe210-v1.1
 alias tp-link-cpe220-v1.1
 
 device tp-link-cpe210-v2.0 cpe210-v2
 
-device tp-link-cpe510-v1.0 cpe510-520
+device tp-link-cpe510-v1.0 cpe510-520-v1
 alias tp-link-cpe510-v1.1
 alias tp-link-cpe520-v1.1
 
-device tp-link-wbs210-v1.20 wbs210
-device tp-link-wbs510-v1.20 wbs510
+device tp-link-wbs210-v1.20 wbs210-v1
+device tp-link-wbs510-v1.20 wbs510-v1
 
 device tp-link-tl-wr710n-v1 tl-wr710n-v1
 device tp-link-tl-wr710n-v2.1 tl-wr710n-v2.1
 
-if [ "$BROKEN" ]; then
-device tp-link-tl-wr810n-v1 tl-wr810n # BROKEN: Untested
-fi
+device tp-link-tl-wr810n-v1 tl-wr810n-v1
 
 device tp-link-tl-wr842n-nd-v1 tl-wr842n-v1
 device tp-link-tl-wr842n-nd-v2 tl-wr842n-v2
@@ -202,6 +211,9 @@ factory -squashfs-factory${GLUON_REGION:+-${GLUON_REGION}} .bin
 device tp-link-archer-c7-v4 archer-c7-v4
 packages $ATH10K_PACKAGES
 
+device tp-link-archer-c7-v5 archer-c7-v5
+packages $ATH10K_PACKAGES
+
 if [ "$BROKEN" ]; then
 device tp-link-archer-c25-v1 archer-c25-v1 # BROKEN: OOM with 5GHz enabled in most environments
 packages $ATH10K_PACKAGES_QCA9887
@@ -219,7 +231,15 @@ if [ "$BROKEN" ]; then
 device tp-link-archer-c60-v1 archer-c60-v1 # BROKEN: OOM with 5GHz enabled in most environments
 fi
 
-device tp-link-re450 re450
+if [ "$BROKEN" ]; then
+device tp-link-re355 re355-v1 # BROKEN: OOM with 5GHz enabled in most environments if device is 64M RAM variant
+fi
+
+if [ "$BROKEN" ]; then
+device tp-link-tl-wr902ac-v1 tl-wr902ac-v1 # BROKEN: OOM due to insufficient RAM for ath10k expected
+fi
+
+device tp-link-re450 re450-v1
 packages $ATH10K_PACKAGES
 
 
@@ -279,7 +299,6 @@ device ubiquiti-ls-sr71 ubnt-ls-sr71 # BROKEN: Untested
 fi
 
 device ubiquiti-unifi-ac-lite ubnt-unifiac-lite
-alias ubiquiti-unifi-ac-mesh
 alias ubiquiti-unifi-ac-lr
 packages $ATH10K_PACKAGES
 factory
@@ -288,8 +307,20 @@ device ubiquiti-unifi-ac-pro ubnt-unifiac-pro
 packages $ATH10K_PACKAGES
 factory
 
+device ubiquiti-unifi-ac-mesh ubnt-unifiac-mesh
+packages $ATH10K_PACKAGES
+factory
+
+device ubiquiti-unifi-ac-mesh-pro ubnt-unifiac-mesh-pro
+packages $ATH10K_PACKAGES
+factory
+
 
 # Western Digital
 
 device wd-my-net-n600 mynet-n600
 device wd-my-net-n750 mynet-n750
+
+# ZyXEL
+device zyxel-nbg6616 NBG6616
+packages $ATH10K_PACKAGES

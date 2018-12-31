@@ -2,13 +2,14 @@
 
 set -e
 
-[ "$GLUON_IMAGEDIR" -a "$GLUON_PACKAGEDIR" -a "$LEDE_TARGET" -a "$GLUON_RELEASE" -a "$GLUON_SITEDIR" ] || exit 1
+[ "$GLUON_IMAGEDIR" -a "$GLUON_PACKAGEDIR" -a "$OPENWRT_TARGET" -a "$GLUON_RELEASE" -a "$GLUON_SITEDIR" ] || exit 1
 
 
 default_factory_ext='.bin'
 default_factory_suffix='-squashfs-factory'
 default_sysupgrade_ext='.bin'
 default_sysupgrade_suffix='-squashfs-sysupgrade'
+default_extra_images=
 
 output=
 profile=
@@ -18,48 +19,69 @@ factory_ext=
 factory_suffix=
 sysupgrade_ext=
 sysupgrade_suffix=
+extra_images=
 
 no_opkg=
 
 
-mkdir -p "${GLUON_IMAGEDIR}/factory" "${GLUON_IMAGEDIR}/sysupgrade"
+mkdir -p "${GLUON_IMAGEDIR}/factory" "${GLUON_IMAGEDIR}/sysupgrade" "${GLUON_IMAGEDIR}/other"
 
-if [ "$(expr match "$LEDE_TARGET" '.*-.*')" -gt 0 ]; then
-	LEDE_BINDIR="${LEDE_TARGET//-/\/}"
+if [ "$(expr match "$OPENWRT_TARGET" '.*-.*')" -gt 0 ]; then
+	OPENWRT_BINDIR="${OPENWRT_TARGET//-/\/}"
 else
-	LEDE_BINDIR="${LEDE_TARGET}/generic"
+	OPENWRT_BINDIR="${OPENWRT_TARGET}/generic"
 fi
 
 SITE_CODE="$(scripts/site.sh site_code)"
 PACKAGE_PREFIX="gluon-${SITE_CODE}-${GLUON_RELEASE}"
 
+
+do_clean() {
+	local dir="$1"
+	local out_suffix="$2"
+	local ext="$3"
+	local name="$4"
+
+	rm -f "${GLUON_IMAGEDIR}/${dir}/gluon-"*"-${name}${out_suffix}${ext}"
+}
+
+get_file() {
+	local dir="$1"
+	local out_suffix="$2"
+	local ext="$3"
+	local name="$4"
+
+	echo "${GLUON_IMAGEDIR}/${dir}/gluon-${SITE_CODE}-${GLUON_RELEASE}-${name}${out_suffix}${ext}"
+}
+
+do_copy() {
+	local dir="$1"
+	local in_suffix="$2"
+	local out_suffix="$3"
+	local ext="$4"
+	local aliases="$5"
+
+	local file="$(get_file "$dir" "$out_suffix" "$ext" "$output")"
+
+	do_clean "$dir" "$out_suffix" "$ext" "$output"
+	cp "openwrt/bin/targets/${OPENWRT_BINDIR}/openwrt-${OPENWRT_TARGET}${profile}${in_suffix}${ext}" "$file"
+
+	for alias in $aliases; do
+		do_clean "$dir" "$out_suffix" "$ext" "$alias"
+		ln -s "$(basename "$file")" "$(get_file "$dir" "$out_suffix" "$ext" "$alias")"
+	done
+}
+
 copy() {
-	[ "${output}" ] || return 0
-	want_device "${output}" || return 0
+	[ "$output" ] || return 0
+	want_device "$output" || return 0
 
-	if [ "$factory_ext" ]; then
-		rm -f "${GLUON_IMAGEDIR}/factory/gluon-"*"-${output}${factory_ext}"
-		cp "lede/bin/targets/${LEDE_BINDIR}/lede-${LEDE_TARGET}${profile}${factory_suffix}${factory_ext}" \
-			"${GLUON_IMAGEDIR}/factory/gluon-${SITE_CODE}-${GLUON_RELEASE}-${output}${factory_ext}"
+	[ -z "$factory_ext" ] || do_copy 'factory' "$factory_suffix" '' "$factory_ext" "$aliases"
+	[ -z "$sysupgrade_ext" ] || do_copy 'sysupgrade' "$sysupgrade_suffix" '-sysupgrade' "$sysupgrade_ext" "$aliases"
 
-		for alias in $aliases; do
-			rm -f "${GLUON_IMAGEDIR}/factory/gluon-"*"-${alias}${factory_ext}"
-			ln -s "gluon-${SITE_CODE}-${GLUON_RELEASE}-${output}${factory_ext}" \
-				"${GLUON_IMAGEDIR}/factory/gluon-${SITE_CODE}-${GLUON_RELEASE}-${alias}${factory_ext}"
-		done
-	fi
-
-	if [ "$sysupgrade_ext" ]; then
-		rm -f "${GLUON_IMAGEDIR}/sysupgrade/gluon-"*"-${output}-sysupgrade${sysupgrade_ext}"
-		cp "lede/bin/targets/${LEDE_BINDIR}/lede-${LEDE_TARGET}${profile}${sysupgrade_suffix}${sysupgrade_ext}" \
-			"${GLUON_IMAGEDIR}/sysupgrade/gluon-${SITE_CODE}-${GLUON_RELEASE}-${output}-sysupgrade${sysupgrade_ext}"
-
-		for alias in $aliases; do
-			rm -f "${GLUON_IMAGEDIR}/sysupgrade/gluon-"*"-${alias}-sysupgrade${sysupgrade_ext}"
-			ln -s "gluon-${SITE_CODE}-${GLUON_RELEASE}-${output}-sysupgrade${sysupgrade_ext}" \
-				"${GLUON_IMAGEDIR}/sysupgrade/gluon-${SITE_CODE}-${GLUON_RELEASE}-${alias}-sysupgrade${sysupgrade_ext}"
-		done
-	fi
+	echo -n "$extra_images" | while read in_suffix && read out_suffix && read ext; do
+		do_copy 'other' "$in_suffix" "$out_suffix" "$ext" "$aliases"
+	done
 }
 
 
@@ -76,6 +98,7 @@ device() {
 	factory_suffix="$default_factory_suffix"
 	sysupgrade_ext="$default_sysupgrade_ext"
 	sysupgrade_suffix="$default_sysupgrade_suffix"
+	extra_images="$default_extra_images"
 }
 
 factory_image() {
@@ -148,6 +171,21 @@ sysupgrade() {
 	fi
 }
 
+extra_image() {
+	local in_suffix="$1"
+	local out_suffix="$2"
+	local ext="$3"
+
+	extra_images="$in_suffix
+$out_suffix
+$ext
+$extra_images"
+
+	if [ -z "$output" ]; then
+		default_extra_images="$extra_images"
+	fi
+}
+
 no_opkg() {
 	no_opkg=1
 }
@@ -157,8 +195,8 @@ no_opkg() {
 
 # Copy opkg repo
 if [ -z "$no_opkg" -a -z "$DEVICES" ]; then
-	rm -f "$GLUON_PACKAGEDIR"/*/"$LEDE_BINDIR"/*
-	rmdir -p "$GLUON_PACKAGEDIR"/*/"$LEDE_BINDIR" 2>/dev/null || true
-	mkdir -p "${GLUON_PACKAGEDIR}/${PACKAGE_PREFIX}/${LEDE_BINDIR}"
-	cp "lede/bin/targets/${LEDE_BINDIR}/packages"/* "${GLUON_PACKAGEDIR}/${PACKAGE_PREFIX}/${LEDE_BINDIR}"
+	rm -f "$GLUON_PACKAGEDIR"/*/"$OPENWRT_BINDIR"/*
+	rmdir -p "$GLUON_PACKAGEDIR"/*/"$OPENWRT_BINDIR" 2>/dev/null || true
+	mkdir -p "${GLUON_PACKAGEDIR}/${PACKAGE_PREFIX}/${OPENWRT_BINDIR}"
+	cp "openwrt/bin/targets/${OPENWRT_BINDIR}/packages"/* "${GLUON_PACKAGEDIR}/${PACKAGE_PREFIX}/${OPENWRT_BINDIR}"
 fi

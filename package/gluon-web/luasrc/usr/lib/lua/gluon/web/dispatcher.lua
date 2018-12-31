@@ -3,7 +3,7 @@
 -- Copyright 2017-2018 Matthias Schiffer <mschiffer@universe-factory.net>
 -- Licensed to the public under the Apache License 2.0.
 
-local fs = require "nixio.fs"
+local glob = require 'posix.glob'
 local json = require "jsonc"
 local tpl = require "gluon.web.template"
 local util = require "gluon.web.util"
@@ -87,6 +87,7 @@ local function dispatch(config, http, request)
 		pcdata      = util.pcdata,
 		urlencode   = proto.urlencode,
 		attr        = attr,
+		json        = json.stringify,
 		url         = function(path) return build_url(http, path) end,
 	}, { __index = _G }))
 
@@ -158,10 +159,10 @@ local function dispatch(config, http, request)
 			ctl()
 		end
 
-		for path in (fs.glob(base .. "*.lua") or function() end) do
+		for _, path in ipairs(glob.glob(base .. "*.lua") or {}) do
 			load_ctl(path)
 		end
-		for path in (fs.glob(base .. "*/*.lua") or function() end) do
+		for _, path in ipairs(glob.glob(base .. "*/*.lua") or {}) do
 			load_ctl(path)
 		end
 	end

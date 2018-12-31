@@ -33,7 +33,7 @@ There are two packages responsible for distribution of the information. For
 one, information is distributed across the mesh using alfred_. Information
 between neighbouring nodes is exchanged using `gluon-respondd`.
 
-.. _alfred: http://www.open-mesh.org/projects/alfred
+.. _alfred: https://www.open-mesh.org/projects/alfred
 
 alfred (mesh bound)
 ~~~~~~~~~~~~~~~~~~~
@@ -97,7 +97,7 @@ In order to retrieve statistics data you could run:
 
 You can find more information about alfred in its README_.
 
-.. _README: https://git.open-mesh.org/alfred.git/blob_plain/refs/heads/master:/README
+.. _README: https://git.open-mesh.org/alfred.git/blob_plain/refs/heads/master:/README.rst
 
 gluon-respondd
 ~~~~~~~~~~~~~~

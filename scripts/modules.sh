@@ -1,8 +1,10 @@
 . ./modules
 [ ! -f "$GLUON_SITEDIR"/modules ] || . "$GLUON_SITEDIR"/modules
 
-GLUON_MODULES=lede
+FEEDS="$(echo $GLUON_FEEDS $GLUON_SITE_FEEDS | tr ' ' '\n')"
 
-for feed in $GLUON_SITE_FEEDS $GLUON_FEEDS; do
+GLUON_MODULES=openwrt
+
+for feed in $FEEDS; do
 	GLUON_MODULES="$GLUON_MODULES packages/$feed"
 done

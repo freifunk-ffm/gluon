@@ -70,6 +70,7 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    :caption: Releases
    :maxdepth: 1
 
+   releases/v2018.2
    releases/v2018.1.4
    releases/v2018.1.3
    releases/v2018.1.2
@@ -133,7 +134,8 @@ ar71xx-generic
 
 * AVM
 
-  - Fritz!Box 4020
+  - Fritz!Box 4020 [#avmflash]_
+  - Fritz!WLAN Repeater 450E [#avmflash]_
 
 * Buffalo
 
@@ -165,6 +167,10 @@ ar71xx-generic
   - WNDR3800
   - WNDRMAC (v2)
 
+* OCEDO
+
+  - Koala [#ath10k]_
+
 * Onion
 
   - Omega
@@ -187,7 +193,7 @@ ar71xx-generic
 
   - Archer C5 (v1) [#ath10k]_
   - Archer C59 (v1) [#80211s]_
-  - Archer C7 (v2, v4) [#ath10k]_
+  - Archer C7 (v2, v4, v5) [#ath10k]_
   - CPE210 (v1.0, v1.1, v2.0)
   - CPE220 (v1.1)
   - CPE510 (v1.0, v1.1)
@@ -197,6 +203,7 @@ ar71xx-generic
   - TL-WDR3600 (v1)
   - TL-WDR4300 (v1)
   - TL-WR710N (v1, v2.1)
+  - TL-WR810N (v1)
   - TL-WR842N/ND (v1, v2, v3)
   - TL-WR1043N/ND (v1, v2, v3, v4, v5)
   - TL-WR2543N/ND (v1)
@@ -219,6 +226,7 @@ ar71xx-generic
   - Rocket M2/M5 Ti
   - Rocket M2/M5 XW
   - UniFi AC Mesh [#ath10k]_
+  - UniFi AC Mesh Pro [#ath10k]_
   - UniFi AP
   - UniFi AP AC Lite [#ath10k]_
   - UniFi AP AC LR [#ath10k]_
@@ -232,6 +240,10 @@ ar71xx-generic
 
   - My Net N600
   - My Net N750
+
+* ZyXEL
+
+  - NBG6616 [#ath10k]_
 
 ar71xx-nand
 ^^^^^^^^^^^
@@ -289,6 +301,33 @@ brcm2708-bcm2709
 
 * RaspberryPi 2
 
+
+ipq40xx
+^^^^^^^
+
+* AVM
+
+  - FRITZ!Box 4040 [#80211s]_ [#avmflash]_
+
+* GL.iNet
+
+  - GL-B1300 [#80211s]_
+
+* NETGEAR
+
+  - EX6100v2 [#80211s]_
+  - EX6150v2 [#80211s]_
+
+* OpenMesh
+
+  - A42 [#80211s]_
+  - A62 [#80211s]_
+
+* ZyXEL
+
+  - NBG6617 [#80211s]_
+  - WRE6606 [#80211s]_
+
 ipq806x
 ^^^^^^^
 
@@ -315,12 +354,21 @@ ramips-mt7620
 ramips-mt7621
 ^^^^^^^^^^^^^
 
+* D-Link
+
+  - DIR-860L (B1) [#80211s]_
+
 * Ubiquiti
 
   - EdgeRouter X
   - EdgeRouter X-SFP
 
-ramips-mt7628
+* ZBT
+
+  - WG3526-16M [#80211s]_
+  - WG3526-32M [#80211s]_
+
+ramips-mt76x8
 ^^^^^^^^^^^^^
 
 * VoCore
@@ -338,8 +386,7 @@ ramips-rt305x
 
 * VoCore
 
-  - VoCore (8M) [#80211s]_
-  - VoCore (16M) [#80211s]_
+  - VoCore (8M, 16M) [#80211s]_
 
 sunxi
 ^^^^^
@@ -383,6 +430,9 @@ Footnotes
 .. [#80211s]
   Device does not support IBSS; images are built by default unless GLUON_WLAN_MESH
   is explicitly set to something other than *11s*
+
+.. [#avmflash]
+  For instructions on how to flash AVM devices, visit https://www.fritzfla.sh
 
 License
 -------

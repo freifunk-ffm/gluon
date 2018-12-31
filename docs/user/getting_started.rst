@@ -8,7 +8,7 @@ Gluon's releases are managed using `Git tags`_. If you are just getting
 started with Gluon we recommend to use the latest stable release of Gluon.
 
 Take a look at the `list of gluon releases`_ and notice the latest release,
-e.g. *v2018.1.4*. Always get Gluon using git and don't try to download it
+e.g. *v2018.2*. Always get Gluon using git and don't try to download it
 as a Zip archive as the archive will be missing version information.
 
 Please keep in mind that there is no "default Gluon" build; a site configuration
@@ -19,13 +19,13 @@ an old site configuration to a newer release of Gluon.
 
 An example configuration can be found in the Gluon repository at *docs/site-example/*.
 
-.. _Git tags: http://git-scm.com/book/en/Git-Basics-Tagging
+.. _Git tags: https://git-scm.com/book/en/v2/Git-Basics-Tagging
 .. _list of gluon releases: https://github.com/freifunk-gluon/gluon/releases
 
 Dependencies
 ------------
 To build Gluon, several packages need to be installed on the system. On a
-freshly installed Debian Wheezy system the following packages are required:
+freshly installed Debian Stretch system the following packages are required:
 
 * `git` (to get Gluon and other dependencies)
 * `subversion`
@@ -37,13 +37,14 @@ freshly installed Debian Wheezy system the following packages are required:
 * `libz-dev` (actually `zlib1g-dev`)
 * `libssl-dev`
 * `wget`
+* `time` (built-in `time` doesn't work)
 
 
 Building the images
 -------------------
 
 To build Gluon, first check out the repository. Replace *RELEASE* with the
-version you'd like to checkout, e.g. *v2018.1.4*.
+version you'd like to checkout, e.g. *v2018.2*.
 
 ::
 
@@ -94,7 +95,7 @@ You should generally reserve 5GB of disk space and additionally about 10GB for e
 
 The built images can be found in the directory `output/images`. Of these, the `factory`
 images are to be used when flashing from the original firmware a device came with,
-and `sysupgrade` is to upgrade from other versions of Gluon or any other OpenWrt/LEDE-based
+and `sysupgrade` is to upgrade from other versions of Gluon or any other OpenWrt-based
 system.
 
 **Note:** The images for some models are identical; to save disk space, symlinks are generated instead
@@ -122,12 +123,12 @@ will clean the entire tree, so the toolchain will be rebuilt as well, which will
 opkg repositories
 -----------------
 
-Gluon is mostly compatible with LEDE, so the normal LEDE package repositories
+Gluon is mostly compatible with OpenWrt, so the normal OpenWrt package repositories
 can be used for Gluon as well.
 
 This is not true for kernel modules; the Gluon kernel is incompatible with the
-kernel of the default LEDE images. Therefore, Gluon will not only generate images,
-but also an opkg repository containing all core packages provided by LEDE,
+kernel of the default OpenWrt images. Therefore, Gluon will not only generate images,
+but also an opkg repository containing all core packages provided by OpenWrt,
 including modules for the kernel of the generated images.
 
 Signing keys
@@ -136,11 +137,11 @@ Signing keys
 Gluon does not support HTTPS for downloading packages; fortunately, opkg deploys
 public-key cryptography to ensure package integrity.
 
-The Gluon images will contain public keys from two sources: the official LEDE keyring
+The Gluon images will contain public keys from two sources: the official OpenWrt keyring
 (to allow installing userspace packages) and a Gluon-specific key (which is used
 to sign the generated package repository).
 
-LEDE will handle the generation and handling of the keys itself.
+OpenWrt will handle the generation and handling of the keys itself.
 When making firmware releases based on Gluon, it might make sense to store
 the keypair, so updating the module repository later is possible.
 

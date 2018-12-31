@@ -4,32 +4,49 @@ return function(form, uci)
 
 	local site = require 'gluon.site'
 
+	local osm
+	pcall(function() osm = require 'gluon.config-mode.geo-location-osm' end)
+
 	local location = uci:get_first("gluon-node-info", "location")
 
-	local function show_altitude()
-		if site.config_mode.geo_location.show_altitude(true) then
-			return true
+	local show_altitude = site.config_mode.geo_location.show_altitude(false)
+
+	local text = site_i18n._translate("gluon-config-mode:geo-location-help")
+	if not text then
+		text = pkg_i18n.translate(
+			'If you want the location of your node to ' ..
+			'be displayed on the map, you can enter its coordinates here.'
+		)
+		if osm then
+			text = text .. ' ' .. osm.help(i18n)
 		end
-
-		return uci:get_bool("gluon-node-info", location, "altitude")
-	end
-
-	local text = site_i18n._translate("gluon-config-mode:geo-location-help") or pkg_i18n.translate(
-		'If you want the location of your node to ' ..
-		'be displayed on the map, you can enter its coordinates here.'
-	)
-	if show_altitude() then
-		text = text .. ' ' .. site_i18n.translate("gluon-config-mode:altitude-help")
+		if show_altitude then
+			text = text .. ' ' .. pkg_i18n.translate(
+				'Specifying the altitude is optional; it should only be filled in if an accurate ' ..
+				'value is known.'
+			)
+		end
 	end
 
 	local s = form:section(Section, nil, text)
 
 	local o
 
-	local share_location = s:option(Flag, "location", pkg_i18n.translate("Show node on the map"))
+	local share_location = s:option(Flag, "location", pkg_i18n.translate("Advertise node position"))
 	share_location.default = uci:get_bool("gluon-node-info", location, "share_location")
 	function share_location:write(data)
 		uci:set("gluon-node-info", location, "share_location", data)
+
+		-- The config mode does not have a nicer place to put this at the moment...
+		if not show_altitude then
+			uci:delete("gluon-node-info", location, "altitude")
+		end
+	end
+
+	local map = {}
+	if osm then
+		map = s:option(osm.MapValue, "map", osm.options())
+		map:depends(share_location, true)
 	end
 
 	o = s:option(Value, "latitude", pkg_i18n.translate("Latitude"), pkg_i18n.translatef("e.g. %s", "53.873621"))
@@ -39,6 +56,7 @@ return function(form, uci)
 	function o:write(data)
 		uci:set("gluon-node-info", location, "latitude", data)
 	end
+	map.lat = o
 
 	o = s:option(Value, "longitude", pkg_i18n.translate("Longitude"), pkg_i18n.translatef("e.g. %s", "10.689901"))
 	o.default = uci:get("gluon-node-info", location, "longitude")
@@ -47,9 +65,13 @@ return function(form, uci)
 	function o:write(data)
 		uci:set("gluon-node-info", location, "longitude", data)
 	end
+	map.lon = o
 
-	if show_altitude() then
-		o = s:option(Value, "altitude", site_i18n.translate("gluon-config-mode:altitude-label"), pkg_i18n.translatef("e.g. %s", "11.51"))
+	if show_altitude then
+		o = s:option(Value, "altitude",
+			site_i18n._translate("gluon-config-mode:altitude-label") or pkg_i18n.translate("Altitude"),
+			pkg_i18n.translatef("e.g. %s", "11.51")
+		)
 		o.default = uci:get("gluon-node-info", location, "altitude")
 		o:depends(share_location, true)
 		o.datatype = "float"
