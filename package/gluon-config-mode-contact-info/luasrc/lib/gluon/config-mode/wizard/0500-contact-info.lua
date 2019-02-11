@@ -1,35 +1,29 @@
-local cbi = require "luci.cbi"
-local i18n = require "luci.i18n"
-local uci = luci.model.uci.cursor()
-local site = require 'gluon.site_config'
+return function(form, uci)
+	local pkg_i18n = i18n 'gluon-config-mode-contact-info'
+	local site_i18n = i18n 'gluon-site'
 
-local M = {}
+	local site = require 'gluon.site'
 
-function M.section(form)
-  local s = form:section(cbi.SimpleSection, nil, i18n.translate(
-    'Please provide your contact information here to '
-      .. 'allow others to contact you. Note that '
-      .. 'this information will be visible <em>publicly</em> '
-      .. 'on the internet together with your node\'s coordinates.'
-    )
-  )
+	local owner = uci:get_first("gluon-node-info", "owner")
 
-  local o = s:option(cbi.Value, "_contact", i18n.translate("Contact info"))
-  o.default = uci:get_first("gluon-node-info", "owner", "contact", "")
-  o.rmempty = not ((site.config_mode or {}).owner or {}).obligatory
-  o.datatype = "string"
-  o.description = i18n.translate("e.g. E-mail or phone number")
-  o.maxlen = 140
+	local help = site_i18n._translate("gluon-config-mode:contact-help") or pkg_i18n.translate(
+		'Please provide your contact information here to allow others to contact '
+		.. 'you. Note that this information will be visible <em>publicly</em> on '
+		.. 'the internet together with your node\'s coordinates. This means it can '
+		.. 'be downloaded and processed by anyone. This information is '
+		.. 'not required to operate a node. If you chose to enter data, it will be '
+		.. 'stored on this node and can be deleted by yourself at any time.'
+	)
+	local s = form:section(Section, nil, help)
+
+	local o = s:option(Value, "contact", pkg_i18n.translate("Contact info"),
+		site_i18n._translate("gluon-config-mode:contact-note") or pkg_i18n.translate("e.g. E-mail or phone number"))
+	o.default = uci:get("gluon-node-info", owner, "contact")
+	o.datatype = 'minlength(1)'
+	o.optional = true
+	function o:write(data)
+		uci:set("gluon-node-info", owner, "contact", data)
+	end
+
+	return {'gluon-node-info'}
 end
-
-function M.handle(data)
-  if data._contact ~= nil then
-    uci:set("gluon-node-info", uci:get_first("gluon-node-info", "owner"), "contact", data._contact)
-  else
-    uci:delete("gluon-node-info", uci:get_first("gluon-node-info", "owner"), "contact")
-  end
-  uci:save("gluon-node-info")
-  uci:commit("gluon-node-info")
-end
-
-return M

@@ -1,49 +1,75 @@
 #!/usr/bin/lua
 
-local fs = require 'nixio.fs'
-local site = require 'gluon.site_config'
-local util = require 'luci.util'
+local unistd = require 'posix.unistd'
+
+if not unistd.access('/etc/opkg/distfeeds.conf') then
+	os.exit(0)
+end
+
+
+local site = require 'gluon.site'
+local util = require 'gluon.util'
 
 
 local subst = {}
 
-subst['%%v'] = util.trim(fs.readfile('/etc/openwrt_version'))
-subst['%%n'], subst['%%S'] = util.exec('. /etc/openwrt_release; echo $DISTRIB_CODENAME; echo $DISTRIB_TARGET'):match('([^\n]*)\n([^\n]*)')
-subst['%%GS'] = site.site_code
-subst['%%GV'] = util.trim(fs.readfile('/lib/gluon/gluon-version'))
-subst['%%GR'] = util.trim(fs.readfile('/lib/gluon/release'))
 
-function replace_patterns(url)
-  for k, v in pairs(subst) do
-    url = url:gsub(k, v)
-  end
+local f = io.popen('. /etc/os-release; echo "$ID"; echo "$VERSION_ID"; echo "$LEDE_BOARD"; echo "$LEDE_ARCH"')
+subst['%%d'] = f:read()
+subst['%%v'] = f:read():gsub('-snapshot', '')
+subst['%%S'] = f:read()
+subst['%%A'] = f:read()
+f:close()
 
-  return url
+subst['%%GS'] = site.site_code()
+subst['%%GV'] = util.trim(util.readfile('/lib/gluon/gluon-version'))
+subst['%%GR'] = util.trim(util.readfile('/lib/gluon/release'))
+
+local prefix = subst['%%d'] .. '_'
+
+
+local function replace_patterns(url)
+	for k, v in pairs(subst) do
+		url = url:gsub(k, v)
+	end
+
+	return url
 end
 
 
-if site.opkg then
-  if site.opkg.openwrt then
-    local url = replace_patterns(site.opkg.openwrt)
-    local f = io.open('/etc/opkg/distfeeds.conf', 'w')
+local openwrt = site.opkg.openwrt()
+local extra = site.opkg.extra({})
 
-    for _, v in ipairs(__GLUON_OPENWRT_FEEDS__) do
-      f:write(replace_patterns(string.format('src/gz %%n_%s %s/%s\n', v, site.opkg.openwrt, v)))
-    end
 
-    f:close()
-  end
+local distfeeds = {}
+for line in io.lines('/etc/opkg/distfeeds.conf') do
+	table.insert(distfeeds, line)
+end
 
-  if site.opkg.extra and next(site.opkg.extra) then
-    local f = io.open('/etc/opkg/gluon.conf', 'w')
+local f = io.open('/etc/opkg/distfeeds.conf', 'w')
 
-    for k, v in pairs(site.opkg.extra) do
-      f:write(string.format('src/gz %s %s\n', k, replace_patterns(v)))
-    end
+for _, line in ipairs(distfeeds) do
+	local name = line:match('^src/gz%s' .. prefix .. '(%S+)%s')
+	if name == 'core' then
+		f:write('# ' .. line .. '\n')
+	elseif name and openwrt then
+		f:write(string.format('src/gz %s %s/%s\n', prefix .. name, replace_patterns(openwrt), name))
+	else
+		f:write(line .. '\n')
+	end
+end
 
-    f:close()
+f:close()
 
-  else
-    os.remove('/etc/opkg/gluon.conf')
-  end
+if next(extra) then
+	local f = io.open('/etc/opkg/gluon.conf', 'w')
+
+	for k, v in pairs(extra) do
+		f:write(string.format('src/gz %s %s\n', k, replace_patterns(v)))
+	end
+
+	f:close()
+
+else
+	os.remove('/etc/opkg/gluon.conf')
 end
