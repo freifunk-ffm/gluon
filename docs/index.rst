@@ -135,6 +135,7 @@ ar71xx-generic
 * AVM
 
   - Fritz!Box 4020 [#avmflash]_
+  - Fritz!WLAN Repeater 300E [#avmflash]_
   - Fritz!WLAN Repeater 450E [#avmflash]_
 
 * Buffalo
@@ -350,6 +351,10 @@ ramips-mt7620
   - GL-MT300A [#80211s]_
   - GL-MT300N [#80211s]_
   - GL-MT750 [#80211s]_
+
+* Nexx
+
+  - WT3020AD/F/H
 
 ramips-mt7621
 ^^^^^^^^^^^^^
