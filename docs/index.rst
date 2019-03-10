@@ -63,6 +63,7 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    package/gluon-ebtables-limit-arp
    package/gluon-ebtables-source-filter
    package/gluon-radv-filterd
+   package/gluon-scheduled-domain-switch
    package/gluon-web-admin
    package/gluon-web-logging
 
@@ -375,6 +376,20 @@ ramips-mt7621
 
 ramips-mt76x8
 ^^^^^^^^^^^^^
+
+* GL.iNet
+
+  - GL-MT300N v2 [#80211s]_
+
+* NETGEAR
+
+  - R6120 [#80211s]_
+
+* TP-Link
+
+  - TL-WR841N v13 [#80211s]_
+  - Archer C50 v3 [#80211s]_
+  - Archer C50 v4 [#80211s]_
 
 * VoCore
 
