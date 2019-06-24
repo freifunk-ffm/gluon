@@ -1,7 +1,7 @@
 Private WLAN
 ============
 
-It is possible to set up a private WLAN that bridges the WAN port and is seperated from the mesh network.
+It is possible to set up a private WLAN that bridges the WAN port and is separated from the mesh network.
 Please note that you should not enable ``mesh_on_wan`` simultaneously.
 
 The private WLAN can be enabled through the config mode if the package ``gluon-web-private-wifi`` is installed.
@@ -19,7 +19,7 @@ You may also enable a private WLAN using the command line::
   uci set wireless.wan_radio$RID.ssid="$SSID"
   uci set wireless.wan_radio$RID.key="$KEY"
   uci set wireless.wan_radio$RID.disabled=0
-  uci set wireless.wan_radio$RID.macaddr="$($(echo "lua -e print(require('gluon.util').generate_mac(3+4*$RID))"))"
+  uci set wireless.wan_radio$RID.macaddr=$(lua -e "print(require('gluon.util').generate_mac(3+4*$RID))")
   uci commit
   wifi
 
