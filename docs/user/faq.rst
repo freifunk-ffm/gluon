@@ -1,10 +1,20 @@
 Frequently Asked Questions
 ==========================
 
+.. _faq-hardware:
+
+What hardware is supported?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+A table with hardware supported by Gluon can be found on the `OpenWrt Wiki`_.
+If you want to find out if your device can potentially be supported 
+have a look at :doc:`../dev/hardware` for detailed hardware requirements.
+
+.. _OpenWrt Wiki: https://openwrt.org/toh/views/toh_gluon_supported
+
 .. _faq-dns:
 
-DNS does not work on the nodes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Why does DNS not work on the nodes?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Gluon nodes will ignore the DNS server on the WAN port for everything except
 the mesh VPN, which can lead to confusion.
@@ -18,8 +28,8 @@ in this case, the *radvd* is only used to announce the DNS server.
 
 .. _faq-mtu:
 
-What is a good MTU on the mesh-vpn
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+What is a good MTU on the mesh-vpn?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Setting the MTU on the transport interface requires careful consideration, as
 setting it too low will cause excessive fragmentation and setting it too high
@@ -30,7 +40,7 @@ Consider these key values:
 - Payload: Allow for the transport of IPv6 packets, by adhering to the minimum MTU
   of 1280 Byte specified in RFC 2460
   - and configure `MSS clamping`_ accordingly,
-  - and announce your link MTU via Router Advertisments and DHCP
+  - and announce your link MTU via Router Advertisements and DHCP
 
   .. _MSS clamping: https://www.tldp.org/HOWTO/Adv-Routing-HOWTO/lartc.cookbook.mtu-mss.html
 
@@ -48,7 +58,7 @@ For reference, the complete MTU stack looks like this:
 Minimum MTU
 -----------
 
-Calculcate the minimum transport MTU by adding the encapsulation overhead to the
+Calculate the minimum transport MTU by adding the encapsulation overhead to the
 minimum payload MTU required. This is the lowest recommended value, since going
 lower would cause unnecessary fragmentation for clients which respect the announced
 link MTU.

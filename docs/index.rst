@@ -1,8 +1,8 @@
 Welcome to Gluon
 ================
 
-Gluon is a modular framework for creating OpenWrt-based firmwares for wireless mesh nodes.
-Several Freifunk communities in Germany use Gluon as the foundation of their Freifunk firmwares.
+Gluon is a modular framework for creating OpenWrt-based firmware images for wireless mesh nodes.
+Several Freifunk communities in Germany use Gluon as the foundation of their Freifunk firmware.
 
 
 .. toctree::
@@ -71,6 +71,7 @@ Several Freifunk communities in Germany use Gluon as the foundation of their Fre
    :caption: Releases
    :maxdepth: 1
 
+   releases/v2018.2.2
    releases/v2018.2.1
    releases/v2018.2
    releases/v2018.1.4
@@ -174,10 +175,6 @@ ar71xx-generic
 
   - Koala [#ath10k]_
 
-* Onion
-
-  - Omega
-
 * OpenMesh
 
   - A40
@@ -224,7 +221,7 @@ ar71xx-generic
   - Loco M2/M5 XW
   - Nanostation M2/M5
   - Nanostation M2/M5 XW
-  - Picostation M2/M5
+  - Picostation M2
   - Rocket M2/M5
   - Rocket M2/M5 Ti
   - Rocket M2/M5 XW
@@ -285,7 +282,7 @@ ar71xx-tiny
   - TL-WA7210N (v2)
   - TL-WA7510N (v1)
   - TL-WR703N (v1)
-  - TL-WR710N (v1, v2, v2.1)
+  - TL-WR710N (v2)
   - TL-WR740N (v1, v3, v4, v5)
   - TL-WR741N/ND (v1, v2, v4, v5)
   - TL-WR743N/ND (v1, v2)
@@ -446,7 +443,7 @@ Footnotes
   is explicitly set to something other than *11s*
 
 .. [#avmflash]
-  For instructions on how to flash AVM devices, visit https://www.fritzfla.sh
+  For instructions on how to flash AVM devices, visit https://fritzfla.sh
 
 License
 -------
