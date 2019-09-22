@@ -5,37 +5,54 @@ PKG_VERSION:=1
 
 include ../gluon.mk
 
-define Package/gluon-mesh-batman-adv/common
-  PROVIDES:=gluon-mesh-batman-adv
-  DEPENDS:=+gluon-core +libgluonutil +gluon-client-bridge +gluon-ebtables +firewall +libiwinfo +kmod-dummy +libnl-tiny +libbatadv +@GLUON_SPECIALIZE_KERNEL:KERNEL_DUMMY +@GLUON_SPECIALIZE_KERNEL:KERNEL_CRC16 +@GLUON_SPECIALIZE_KERNEL:KERNEL_LIBCRC32C
+define Package/gluon-mesh-batman-adv-common
+  TITLE:=Gluon scripts for batman-adv and batman-adv-legacy
+  DEPENDS:= \
+	+gluon-core \
+	+libgluonutil \
+	+gluon-client-bridge \
+	+gluon-ebtables \
+	+firewall \
+	+libiwinfo \
+	+kmod-dummy \
+	+libnl-tiny \
+	+libbatadv \
+	+batctl \
+	+@GLUON_SPECIALIZE_KERNEL:KERNEL_DUMMY \
+	+@GLUON_SPECIALIZE_KERNEL:KERNEL_CRC16 \
+	+@GLUON_SPECIALIZE_KERNEL:KERNEL_LIBCRC32C
 endef
 
 define Package/gluon-mesh-batman-adv-14
-$(Package/gluon-mesh-batman-adv/common)
+  PROVIDES:=gluon-mesh-batman-adv
   TITLE:=Support for batman-adv meshing (compat level 14)
-  CONFLICTS:=gluon-mesh-batman-adv-15
-  DEPENDS+=+kmod-batman-adv-legacy
+  DEPENDS+= \
+	+gluon-mesh-batman-adv-common \
+	+kmod-batman-adv-legacy
 endef
 
 define Package/gluon-mesh-batman-adv-15
-$(Package/gluon-mesh-batman-adv/common)
+  PROVIDES:=gluon-mesh-batman-adv
   TITLE:=Support for batman-adv meshing (compat level 15)
-  DEPENDS+=+kmod-batman-adv +batctl
+  DEPENDS+= \
+	+gluon-mesh-batman-adv-common \
+	+kmod-batman-adv
+endef
+
+define Package/gluon-mesh-batman-adv-common/install
+	$(Gluon/Build/Install)
 endef
 
 define Package/gluon-mesh-batman-adv-14/install
-	$(Gluon/Build/Install)
-
 	$(INSTALL_DIR) $(1)/lib/gluon/mesh-batman-adv
-	echo 14 > $(1)/lib/gluon/mesh-batman-adv/compat
+	touch $(1)/lib/gluon/mesh-batman-adv/compat-14
 endef
-
+#
 define Package/gluon-mesh-batman-adv-15/install
-	$(Gluon/Build/Install)
-
 	$(INSTALL_DIR) $(1)/lib/gluon/mesh-batman-adv
-	echo 15 > $(1)/lib/gluon/mesh-batman-adv/compat
+	touch $(1)/lib/gluon/mesh-batman-adv/compat-15
 endef
 
+$(eval $(call BuildPackageGluon,gluon-mesh-batman-adv-common))
 $(eval $(call BuildPackageGluon,gluon-mesh-batman-adv-14))
 $(eval $(call BuildPackageGluon,gluon-mesh-batman-adv-15))

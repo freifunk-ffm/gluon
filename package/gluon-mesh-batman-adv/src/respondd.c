@@ -232,24 +232,23 @@ static struct json_object * get_mesh(void) {
 	return ret;
 }
 
-static struct json_object * get_batman_adv_compat(void) {
-	FILE *f = fopen("/lib/gluon/mesh-batman-adv/compat", "r");
-	if (!f)
+static struct json_object * get_batman_adv_compat(const char *version) {
+	int compat = 15;
+
+	if (!version)
 		return NULL;
 
-	struct json_object *ret = NULL;
+	if (strcmp(version, "2013.4.0") == 0)
+		compat = 14;
 
-	int compat;
-	if (fscanf(f, "%i", &compat) == 1)
-		ret = json_object_new_int(compat);
-
-	fclose(f);
-
-	return ret;
+	return json_object_new_int(compat);
 }
 
 static struct json_object * respondd_provider_nodeinfo(void) {
 	struct json_object *ret = json_object_new_object();
+
+	char *version = gluonutil_read_line("/sys/module/batman_adv/version");
+	struct json_object *compat = get_batman_adv_compat(version);
 
 	struct json_object *network = json_object_new_object();
 	json_object_object_add(network, "addresses", get_addresses());
@@ -258,8 +257,8 @@ static struct json_object * respondd_provider_nodeinfo(void) {
 
 	struct json_object *software = json_object_new_object();
 	struct json_object *software_batman_adv = json_object_new_object();
-	json_object_object_add(software_batman_adv, "version", gluonutil_wrap_and_free_string(gluonutil_read_line("/sys/module/batman_adv/version")));
-	json_object_object_add(software_batman_adv, "compat", get_batman_adv_compat());
+	json_object_object_add(software_batman_adv, "version", gluonutil_wrap_and_free_string(version));
+	json_object_object_add(software_batman_adv, "compat", compat);
 	json_object_object_add(software, "batman-adv", software_batman_adv);
 	json_object_object_add(ret, "software", software);
 
@@ -666,9 +665,6 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 				      BATADV_ARRAY_SIZE(parse_orig_list_mandatory)))
 		return NL_OK;
 
-	if (!attrs[BATADV_ATTR_FLAG_BEST])
-		return NL_OK;
-
 	orig = nla_data(attrs[BATADV_ATTR_ORIG_ADDRESS]);
 	dest = nla_data(attrs[BATADV_ATTR_NEIGH_ADDRESS]);
 	tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
@@ -697,6 +693,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 
 	json_object_object_add(obj, "tq", json_object_new_int(tq));
 	json_object_object_add(obj, "lastseen", json_object_new_double(lastseen / 1000.));
+	json_object_object_add(obj, "best", json_object_new_boolean(attrs[BATADV_ATTR_FLAG_BEST]));
 	json_object_object_add(interface, mac1, obj);
 
 	return NL_OK;

@@ -1,11 +1,12 @@
 config 'CONFIG_GLUON_SPECIALIZE_KERNEL=y'
 
-# Enable ath5k in addition to ath9k
-# ath5k cards are commonly used with Mikrotik hardware
-packages 'kmod-ath5k'
+defaults {
+	factory = false,
+}
 
-device mikrotik-nand-64m nand-64m
-factory
+device('mikrotik-rb-nor-flash-16M', 'rb-nor-flash-16M')
+device('mikrotik-rb-nor-flash-16M-ac', 'rb-nor-flash-16M-ac')
 
-device mikrotik-nand-large nand-large
-factory
+device('mikrotik-nand-64m', 'nand-64m')
+device('mikrotik-nand-large', 'nand-large')
+device('mikrotik-nand-large-ac', 'nand-large-ac')

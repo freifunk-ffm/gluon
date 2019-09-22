@@ -4,11 +4,8 @@
 
 -- This class contains several functions useful for http message- and content
 -- decoding and to retrive form data from raw http messages.
-module("gluon.web.http.protocol", package.seeall)
 
-
-HTTP_MAX_CONTENT      = 1024*8		-- 8 kB maximum content size
-
+local M = {}
 
 local function pump(src, snk)
 	while true do
@@ -26,7 +23,7 @@ local function pump(src, snk)
 	end
 end
 
-function urlencode(s)
+function M.urlencode(s)
 	return (string.gsub(s, '[^a-zA-Z0-9%-_%.~]',
 		function(c)
 			local ret = ''
@@ -41,7 +38,7 @@ function urlencode(s)
 end
 
 -- the "+" sign to " " - and return the decoded string.
-function urldecode(str, no_plus)
+function M.urldecode(str, no_plus)
 
 	local function chrdec(hex)
 		return string.char(tonumber(hex, 16))
@@ -75,7 +72,7 @@ end
 -- Simple parameters are stored as string values associated with the parameter
 -- name within the table. Parameters with multiple values are stored as array
 -- containing the corresponding values.
-function urldecode_params(url)
+function M.urldecode_params(url)
 	local params = {}
 
 	if url:find("?") then
@@ -85,8 +82,8 @@ function urldecode_params(url)
 	for pair in url:gmatch("[^&;]+") do
 
 		-- find key and value
-		local key = urldecode(pair:match("^([^=]+)"))
-		local val = urldecode(pair:match("^[^=]+=(.+)$"))
+		local key = M.urldecode(pair:match("^([^=]+)"))
+		local val = M.urldecode(pair:match("^[^=]+=(.+)$"))
 
 		-- store
 		if key and key:len() > 0 then
@@ -110,7 +107,7 @@ end
 --  o Table containing decoded (name, file) and raw (headers) mime header data
 --  o String value containing a chunk of the file data
 --  o Boolean which indicates whether the current chunk is the last one (eof)
-function mimedecode_message_body(src, msg, filecb)
+local function mimedecode_message_body(src, msg, filecb)
 
 	if msg and msg.env.CONTENT_TYPE then
 		msg.mime_boundary = msg.env.CONTENT_TYPE:match("^multipart/form%-data; boundary=(.+)$")
@@ -127,13 +124,13 @@ function mimedecode_message_body(src, msg, filecb)
 	local store  = nil
 	local lchunk = nil
 
-	local function parse_headers(chunk, field)
+	local function parse_headers(chunk, pfield)
 		local stat
 		repeat
 			chunk, stat = chunk:gsub(
 				"^([A-Z][A-Za-z0-9%-_]+): +([^\r\n]+)\r\n",
 				function(k,v)
-					field.headers[k] = v
+					pfield.headers[k] = v
 					return ""
 				end
 			)
@@ -143,26 +140,26 @@ function mimedecode_message_body(src, msg, filecb)
 
 		-- End of headers
 		if stat > 0 then
-			if field.headers["Content-Disposition"] then
-				if field.headers["Content-Disposition"]:match("^form%-data; ") then
-					field.name = field.headers["Content-Disposition"]:match('name="(.-)"')
-					field.file = field.headers["Content-Disposition"]:match('filename="(.+)"$')
+			if pfield.headers["Content-Disposition"] then
+				if pfield.headers["Content-Disposition"]:match("^form%-data; ") then
+					pfield.name = pfield.headers["Content-Disposition"]:match('name="(.-)"')
+					pfield.file = pfield.headers["Content-Disposition"]:match('filename="(.+)"$')
 				end
 			end
 
-			if not field.headers["Content-Type"] then
-				field.headers["Content-Type"] = "text/plain"
+			if not pfield.headers["Content-Type"] then
+				pfield.headers["Content-Type"] = "text/plain"
 			end
 
 
-			if field.name then
-				initval(msg.params, field.name)
-				if field.file then
-					appendval(msg.params, field.name, field.file)
+			if pfield.name then
+				initval(msg.params, pfield.name)
+				if pfield.file then
+					appendval(msg.params, pfield.name, pfield.file)
 					store = filecb
 				else
-					store = function(hdr, buf, eof)
-						appendval(msg.params, field.name, buf)
+					store = function(_, buf, _)
+						appendval(msg.params, pfield.name, buf)
 					end
 				end
 			else
@@ -200,6 +197,7 @@ function mimedecode_message_body(src, msg, filecb)
 
 				if spos then
 					local predata = data:sub(1, spos - 1)
+					local eof
 
 					if inhdr then
 						predata, eof = parse_headers(predata, field)
@@ -228,11 +226,12 @@ function mimedecode_message_body(src, msg, filecb)
 				-- We found at least some boundary. Save
 				-- the unparsed remaining data for the
 				-- next chunk.
-				lchunk, data = data, nil
+				lchunk = data
 			else
 				-- There was a complete chunk without a boundary. Parse it as headers or
 				-- append it as data, depending on our current state.
 				if inhdr then
+					local eof
 					lchunk, eof = parse_headers(data, field)
 					inhdr = not eof
 				else
@@ -243,7 +242,7 @@ function mimedecode_message_body(src, msg, filecb)
 					if store then
 						store(field, lchunk, false)
 					end
-					lchunk, chunk = chunk, nil
+					lchunk = chunk
 				end
 			end
 		end
@@ -257,7 +256,7 @@ end
 -- This function will examine the Content-Type within the given message object
 -- to select the appropriate content decoder.
 -- Currently only the multipart/form-data mime type is supported.
-function parse_message_body(src, msg, filecb)
+function M.parse_message_body(src, msg, filecb)
 	if not (msg.env.REQUEST_METHOD == "POST" and msg.env.CONTENT_TYPE) then
 		return
 	end
@@ -266,3 +265,5 @@ function parse_message_body(src, msg, filecb)
 		return mimedecode_message_body(src, msg, filecb)
 	end
 end
+
+return M

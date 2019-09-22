@@ -15,6 +15,7 @@ end
 need_string_match(in_domain({'domain_seed'}), '^' .. ('%x'):rep(64) .. '$')
 
 need_string({'opkg', 'openwrt'}, false)
+obsolete({'opkg', 'lede'}, 'Use opkg.openwrt instead.')
 need_table({'opkg', 'extra'}, function(extra_repo)
 	need_alphanumeric_key(extra_repo)
 	need_string(extra_repo)
@@ -27,28 +28,39 @@ need_string_array({'ntp_servers'}, false)
 
 need_string_match(in_domain({'prefix6'}), '^[%x:]+/64$')
 
-
+local supported_rates = {6000, 9000, 12000, 18000, 24000, 36000, 48000, 54000}
 for _, config in ipairs({'wifi24', 'wifi5'}) do
 	if need_table({config}, nil, false) then
 		need_string(in_site({'regdom'})) -- regdom is only required when wifi24 or wifi5 is configured
 
-		need_number({config, 'channel'})
+		if config == "wifi24" then
+			local channels = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+			need_one_of({config, 'channel'}, channels)
+		elseif config == 'wifi5' then
+			local channels = {
+				34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62,
+				64, 96, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118,
+				120, 122, 124, 126, 128, 132, 134, 136, 138, 140, 142, 144,
+				149, 151, 153, 155, 157, 159, 161, 165, 169, 173 }
+			need_one_of({config, 'channel'}, channels)
+			need_chanlist({config, 'outdoor_chanlist'}, channels, false)
+			need_one_of({config, 'outdoors'}, {true, false, 'preset'}, false)
+		end
 
-		local rates = {1000, 2000, 5500, 6000, 9000, 11000, 12000, 18000, 24000, 36000, 48000, 54000}
-		local supported_rates = need_array_of(in_site({config, 'supported_rates'}), rates, false)
-		need_array_of({config, 'basic_rate'}, supported_rates or rates, supported_rates ~= nil)
+		obsolete({config, 'supported_rates'}, '802.11b rates are disabled by default.')
+		obsolete({config, 'basic_rate'}, '802.11b rates are disabled by default.')
 
 		if need_table({config, 'ibss'}, nil, false) then
 			need_string_match(in_domain({config, 'ibss', 'ssid'}), '^' .. ('.?'):rep(32) .. '$')
 			need_string_match(in_domain({config, 'ibss', 'bssid'}), '^%x[02468aAcCeE]:%x%x:%x%x:%x%x:%x%x:%x%x$')
-			need_one_of({config, 'ibss', 'mcast_rate'}, supported_rates or rates, false)
+			need_one_of({config, 'ibss', 'mcast_rate'}, supported_rates, false)
 			need_number({config, 'ibss', 'vlan'}, false)
 			need_boolean({config, 'ibss', 'disabled'}, false)
 		end
 
 		if need_table({config, 'mesh'}, nil, false) then
 			need_string_match(in_domain({config, 'mesh', 'id'}), '^' .. ('.?'):rep(32) .. '$')
-			need_one_of({config, 'mesh', 'mcast_rate'}, supported_rates or rates, false)
+			need_one_of({config, 'mesh', 'mcast_rate'}, supported_rates, false)
 			need_boolean({config, 'mesh', 'disabled'}, false)
 		end
 	end

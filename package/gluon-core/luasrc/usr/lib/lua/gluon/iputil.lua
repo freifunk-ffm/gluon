@@ -1,10 +1,9 @@
 local bit = require 'bit'
-local string = string
-local tonumber = tonumber
-local table = table
-module 'gluon.iputil'
 
-function IPv6(address)
+
+local M = {}
+
+function M.IPv6(address)
 	--[[
 	(c) 2008 Jo-Philipp Wich <xm@leipzig.freifunk.net>
 	(c) 2008 Steven Barth <steven@midlink.org>
@@ -75,10 +74,10 @@ function IPv6(address)
 	end
 end
 
-function mac_to_ip(prefix, mac)
+function M.mac_to_ip(prefix, mac, firstbyte, secondbyte)
 	local m1, m2, m3, m6, m7, m8 = string.match(mac, '(%x%x):(%x%x):(%x%x):(%x%x):(%x%x):(%x%x)')
-	local m4 = 0xff
-	local m5 = 0xfe
+	local m4 = firstbyte or 0xff
+	local m5 = secondbyte or 0xfe
 	m1 = bit.bxor(tonumber(m1, 16), 0x02)
 
 	local h1 = 0x100 * m1 + tonumber(m2, 16)
@@ -86,11 +85,11 @@ function mac_to_ip(prefix, mac)
 	local h3 = 0x100 * m5 + tonumber(m6, 16)
 	local h4 = 0x100 * tonumber(m7, 16) + tonumber(m8, 16)
 
-	local prefix, plen = string.match(prefix, '(.*)/(%d+)')
-	plen = tonumber(plen, 10)
+	prefix = string.match(prefix, '(.*)/%d+')
 
-	local p1, p2, p3, p4, p5, p6, p7, p8 = IPv6(prefix)
+	local p1, p2, p3, p4 = M.IPv6(prefix)
 
 	return string.format("%x:%x:%x:%x:%x:%x:%x:%x/%d", p1, p2, p3, p4, h1, h2, h3, h4, 128)
 end
 
+return M

@@ -54,9 +54,6 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 	                        BATADV_ARRAY_SIZE(parse_orig_list_mandatory)))
     return NL_OK;
 
-  if (!attrs[BATADV_ATTR_FLAG_BEST])
-    return NL_OK;
-
   orig = nla_data(attrs[BATADV_ATTR_ORIG_ADDRESS]);
   dest = nla_data(attrs[BATADV_ATTR_NEIGH_ADDRESS]);
   tq = nla_get_u8(attrs[BATADV_ATTR_TQ]);
@@ -78,6 +75,7 @@ static int parse_orig_list_netlink_cb(struct nl_msg *msg, void *arg)
 
   json_object_object_add(neigh, "tq", json_object_new_int(tq * 100 / 255));
   json_object_object_add(neigh, "ifname", json_object_new_string(ifname));
+  json_object_object_add(neigh, "best", json_object_new_boolean(attrs[BATADV_ATTR_FLAG_BEST]));
 
   json_object_object_add(opts->obj, mac1, neigh);
 

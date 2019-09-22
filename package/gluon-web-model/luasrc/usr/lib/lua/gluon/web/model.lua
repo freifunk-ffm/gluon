@@ -2,8 +2,6 @@
 -- Copyright 2017-2018 Matthias Schiffer <mschiffer@universe-factory.net>
 -- Licensed to the public under the Apache License 2.0.
 
-module('gluon.web.model', package.seeall)
-
 local unistd = require 'posix.unistd'
 local classes = require 'gluon.web.model.classes'
 
@@ -15,7 +13,7 @@ local function load(filename, i18n)
 	local func = assert(loadfile(filename))
 
 	setfenv(func, setmetatable({}, {__index =
-		function(tbl, key)
+		function(_, key)
 			return classes[key] or i18n[key] or _G[key]
 		end
 	}))

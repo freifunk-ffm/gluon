@@ -1,4 +1,5 @@
-# Aerohive
+-- Aerohive
 
-device aerohive-hiveap-330 hiveap-330
-factory
+device('aerohive-hiveap-330', 'hiveap-330', {
+        factory = false,
+})

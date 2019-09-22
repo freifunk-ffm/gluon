@@ -8,7 +8,7 @@ Gluon's releases are managed using `Git tags`_. If you are just getting
 started with Gluon we recommend to use the latest stable release of Gluon.
 
 Take a look at the `list of gluon releases`_ and notice the latest release,
-e.g. *v2018.2.3*. Always get Gluon using git and don't try to download it
+e.g. *v2019.1*. Always get Gluon using git and don't try to download it
 as a Zip archive as the archive will be missing version information.
 
 Please keep in mind that there is no "default Gluon" build; a site configuration
@@ -44,7 +44,7 @@ Building the images
 -------------------
 
 To build Gluon, first check out the repository. Replace *RELEASE* with the
-version you'd like to checkout, e.g. *v2018.2.3*.
+version you'd like to checkout, e.g. *v2019.1*.
 
 ::
 
@@ -94,7 +94,7 @@ In case of errors read the messages carefully and try to fix the stated issues
 ``ar71xx-generic`` is the most common target and will generate images for most of the supported hardware.
 To see a complete list of supported targets, call ``make`` without setting ``GLUON_TARGET``.
 
-To build all targets use a loop like this:
+To build all targets use a loop like this::
 
     for TARGET in $(make list-targets); do
       make GLUON_TARGET=$TARGET
@@ -170,6 +170,19 @@ GLUON_BRANCH
   by default. For the ``make manifest`` command, GLUON_BRANCH defines the branch to
   generate a manifest for.
 
+GLUON_DEPRECATED
+  Controls whether images for deprecated devices should be built. The following
+  values are supported:
+
+  - ``0``: Do not build any images for deprecated devices.
+  - ``upgrade``: Only build sysupgrade images for deprecated devices.
+  - ``full``: Build both sysupgrade and factory images for deprecated devices.
+
+  Usually, devices are deprecated because their flash size is insufficient to
+  support future Gluon versions. The recommended setting is ``0`` for new sites,
+  and ``upgrade`` for existing configurations (where upgrades for existing
+  deployments of low-flash devices are required).
+
 GLUON_LANGS
   Space-separated list of languages to include for the config mode/advanced settings. Defaults to ``en``.
   ``en`` should always be included, other supported languages are ``de`` and ``fr``.
@@ -194,6 +207,16 @@ GLUON_TARGET
 
 Special variables
 .................
+
+GLUON_DEBUG
+  Setting ``GLUON_DEBUG=1`` will provide firmware images including debugging symbols usable with GDB or
+  similar tools. Requires a device or target with at least 16 MB of flash space, e.g. `x86-64`. Unset by default.
+
+GLUON_DEVICES
+  List of devices to build. The list contains the Gluon profile name of a device, the profile
+  name is the first parameter of the ``device`` command in a target file.
+  e.g. ``GLUON_DEVICES="avm-fritz-box-4020 tp-link-tl-wdr4300-v1"``.
+  Empty by default to build all devices of a target.
 
 GLUON_IMAGEDIR
   Path where images will be stored. Defaults to ``$(GLUON_OUTPUTDIR)/images``.

@@ -1,5 +1,5 @@
 local uci = require("simple-uci").cursor()
-local util = gluon.util
+local util = require 'gluon.util'
 
 local f = Form(translate('Mesh VPN'))
 
@@ -20,20 +20,20 @@ end
 function mode:write(data)
 	local site = require 'gluon.site'
 
-	-- methods will be recreated and filled with the original values from site.mesh_vpn.fastd.methods
+	-- site_methods will be recreated and filled with the original values from site.mesh_vpn.fastd.methods
 	-- if performance mode was selected, and the method 'null' was not present in the original table, it will be added
-	local methods = {}
+	local site_methods = {}
 	if data == 'performance' then
-		table.insert(methods, 'null')
+		table.insert(site_methods, 'null')
 	end
 
 	for _, method in ipairs(site.mesh_vpn.fastd.methods()) do
 		if method ~= 'null' then
-			table.insert(methods, method)
+			table.insert(site_methods, method)
 		end
 	end
 
-	uci:set('fastd', 'mesh_vpn', 'method', methods)
+	uci:set('fastd', 'mesh_vpn', 'method', site_methods)
 
 	uci:save('fastd')
 	uci:commit('fastd')
