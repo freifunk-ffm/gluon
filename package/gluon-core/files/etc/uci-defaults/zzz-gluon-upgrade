@@ -1,5 +1,0 @@
-#!/bin/sh
-
-gluon-reconfigure
-
-exit 0

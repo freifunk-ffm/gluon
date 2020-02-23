@@ -1,3 +1,0 @@
-#!/bin/sh
-
-ubus call network.interface.gluon_bat0 renew
