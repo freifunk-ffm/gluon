@@ -1,7 +1,0 @@
-#!/bin/sh
-
-. /lib/gluon/autoupdater/lib.sh
-
-
-start_enabled sse-multiplexd
-start_enabled uhttpd
