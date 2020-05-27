@@ -218,6 +218,11 @@ brcm2708-bcm2709
 ipq40xx-generic
 ---------------
 
+* Aruba
+
+  - AP-303
+  - Instant On AP11
+
 * AVM
 
   - FRITZ!Box 4040 [#avmflash]_
@@ -265,9 +270,6 @@ lantiq-xway
 * AVM
 
   - FRITZ!Box 7312 [#avmflash]_
-  - FRITZ!Box 7320 [#avmflash]_ [#lan_as_wan]_
-  - FRITZ!Box 7330 [#avmflash]_ [#lan_as_wan]_
-  - FRITZ!Box 7330 SL [#avmflash]_ [#lan_as_wan]_
 
 mpc85xx-generic
 ---------------
